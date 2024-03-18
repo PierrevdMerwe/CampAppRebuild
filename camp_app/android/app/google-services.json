@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "476988375532",
+    "project_id": "camp-app-rebuild",
+    "storage_bucket": "camp-app-rebuild.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:476988375532:android:58d1f1e1cfd4f95eb780c9",
+        "android_client_info": {
+          "package_name": "com.example.camp_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwr5ME7yr1l8fi3PLoMr1mPfcpZYINJzQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
