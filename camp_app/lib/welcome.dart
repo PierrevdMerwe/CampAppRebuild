@@ -13,73 +13,22 @@ class WelcomeScreen extends StatefulWidget {
   State<WelcomeScreen> createState() => _WelcomeScreenState();
 }
 
-class _WelcomeScreenState extends State<WelcomeScreen> {
-  String welcomeText = "";
-  String descriptionText = "";
-  bool isEllipsisAnimating = false;
+class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 2), () {
-      _animateWelcomeText();
-    });
-  }
-
-  void _animateWelcomeText() async {
-    String text = "Welcome";
-    for (int i = 0; i < text.length; i++) {
-      setState(() {
-        welcomeText = text.substring(0, i + 1);
-      });
-      await Future.delayed(
-          const Duration(milliseconds: 250)); // Slower typing speed
-    }
-    _animateDescriptionText();
-  }
-
-  void _animateDescriptionText() async {
-    String text = "The perfect camping getaway is at your fingertips...";
-    for (int i = 0; i < text.length; i++) {
-      setState(() {
-        descriptionText = text.substring(0, i + 1);
-      });
-      await Future.delayed(
-          const Duration(milliseconds: 100)); // Slower typing speed
-    }
-    _startEllipsisAnimation();
-  }
-
-  void _startEllipsisAnimation() async {
-    setState(() {
-      isEllipsisAnimating = true;
-    });
-    while (isEllipsisAnimating) {
-      for (int i = 0; i < 3; i++) {
-        setState(() {
-          descriptionText =
-              descriptionText.substring(0, descriptionText.length - 1);
-        });
-        await Future.delayed(
-            const Duration(milliseconds: 250)); // Slower dot removal
-      }
-      for (int i = 0; i < 3; i++) {
-        setState(() {
-          descriptionText += ".";
-        });
-        await Future.delayed(
-            const Duration(milliseconds: 250)); // Slower dot addition
-      }
-      await Future.delayed(const Duration(seconds: 1)); // Slower overall loop
-    }
+    _controller = AnimationController(
+      duration: const Duration(seconds: 1),
+      vsync: this,
+    )..repeat(reverse: true);
   }
 
   @override
-  void deactivate() {
-    super.deactivate();
-    setState(() {
-      isEllipsisAnimating = false;
-    });
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -87,88 +36,83 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        backgroundColor: Colors.white,
+        // backgroundColor: Colors.white,
         body: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              const SizedBox(
-                height: 100.0,
-              ),
-              SizedBox(
-                height: 50.0,
-                child: Text(
-                  welcomeText,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 38.0,
-                    fontWeight: FontWeight.bold,
+              Padding(
+                padding: const EdgeInsets.only(top: 150.0, left: 10.0, right: 10.0),
+                child: Center(
+                    child: Text(
+                      'Best Campgrounds in South Africa',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 24.0,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xfff51957),
+                      ),
+                    ),
                   ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 5.0),
+                child: SizedBox(
+                  height: 400.0,
+                  width: 400.0,
+                  child: Image.asset('images/logo.jpg'),
                 ),
               ),
-              const SizedBox(height: 20.0),
-              SizedBox(
-                height: 80.0,
-                child: Text(
-                  descriptionText,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 30.0),
-              SizedBox(
-                height: 400.0,
-                width: 400.0,
-                child: Image.asset('images/logo.jpg'),
-              ),
-              const SizedBox(height: 20.0),
+              const SizedBox(height: 10.0,),
               SizedBox(
                 height: 50,
                 width: MediaQuery.of(context).size.width - 40.0,
                 child: Builder(builder: (BuildContext context) {
-                  return ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  LoginScreen(),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            var begin = const Offset(1.0, 0.0);
-                            var end = Offset.zero;
-                            var curve = Curves.ease;
+                  return ScaleTransition(
+                    scale: Tween(begin: 0.95, end: 1.0).animate(_controller),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          PageRouteBuilder(
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                LoginScreen(),
+                            transitionsBuilder:
+                                (context, animation, secondaryAnimation, child) {
+                              var begin = const Offset(1.0, 0.0);
+                              var end = Offset.zero;
+                              var curve = Curves.ease;
 
-                            var tween = Tween(begin: begin, end: end)
-                                .chain(CurveTween(curve: curve));
+                              var tween = Tween(begin: begin, end: end)
+                                  .chain(CurveTween(curve: curve));
 
-                            return SlideTransition(
-                              position: animation.drive(tween),
-                              child: child,
-                            );
-                          },
+                              return SlideTransition(
+                                position: animation.drive(tween),
+                                child: child,
+                              );
+                            },
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xfff51957),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
                         ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xfff51957),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
                       ),
-                    ),
-                    child: Text(
-                      'Sign me up!',
-                      style: GoogleFonts.montserrat(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                      child: Text(
+                        'Sign me up!',
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   );
                 }),
               ),
+              const SizedBox(height: 10,)
             ],
           ),
         ),

@@ -13,9 +13,9 @@ class LoginScreen extends StatelessWidget {
 
   Future<UserCredential> signInWithGoogle() async {
     final GoogleSignInAccount? googleSignInAccount =
-    await googleSignIn.signIn();
+        await googleSignIn.signIn();
     final GoogleSignInAuthentication googleSignInAuthentication =
-    await googleSignInAccount!.authentication;
+        await googleSignInAccount!.authentication;
 
     final AuthCredential credential = GoogleAuthProvider.credential(
       accessToken: googleSignInAuthentication.accessToken,
@@ -44,15 +44,30 @@ class LoginScreen extends StatelessWidget {
                     width: 200,
                     child: Lottie.asset('assets/sign.json'),
                   ),
-                  const SizedBox(height: 20.0),
-                  Text(
-                    'Discover your next adventure',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 24.0,
-                      fontWeight: FontWeight.bold,
+                  const SizedBox(height: 40.0),
+                  RichText(
+                    text: TextSpan(
+                      children: <TextSpan>[
+                        TextSpan(
+                          text: 'Discover your next ',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 24.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                        TextSpan(
+                          text: 'adventure',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 24.0,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xfff51957),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 20.0),
+                  const SizedBox(height: 40.0),
                   const TextField(
                     decoration: InputDecoration(
                       labelText: 'Email',
@@ -78,9 +93,9 @@ class LoginScreen extends StatelessWidget {
                           PageRouteBuilder(
                             pageBuilder:
                                 (context, animation, secondaryAnimation) =>
-                                PreferencesScreen(),
-                            transitionsBuilder:
-                                (context, animation, secondaryAnimation, child) {
+                                    const PreferencesScreen(),
+                            transitionsBuilder: (context, animation,
+                                secondaryAnimation, child) {
                               var begin = const Offset(1.0, 0.0);
                               var end = Offset.zero;
                               var curve = Curves.ease;
@@ -118,22 +133,28 @@ class LoginScreen extends StatelessWidget {
                       onPressed: () async {
                         // Handle Google sign-in
                         final GoogleSignInAccount? googleUser =
-                        await GoogleSignIn().signIn();
+                            await GoogleSignIn().signIn();
                         if (googleUser != null) {
                           final GoogleSignInAuthentication googleAuth =
-                          await googleUser.authentication;
+                              await googleUser.authentication;
                           final OAuthCredential credential =
-                          GoogleAuthProvider.credential(
+                              GoogleAuthProvider.credential(
                             accessToken: googleAuth.accessToken,
                             idToken: googleAuth.idToken,
                           );
                           try {
-                            await _auth.signInWithCredential(credential);
-                            // Display message
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Signed in successfully')),
-                            );
+                            final UserCredential userCredential =
+                                await _auth.signInWithCredential(credential);
+                            // Check if sign-in was successful
+                            if (userCredential.user != null) {
+                              // Navigate to PreferencesScreen
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const PreferencesScreen()),
+                              );
+                            }
                           } on FirebaseAuthException catch (e) {
                             // Handle error
                             print(e.message);
