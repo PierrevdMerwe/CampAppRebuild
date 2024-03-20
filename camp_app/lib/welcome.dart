@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'login.dart';
 
-void main() {
-  runApp(const WelcomeScreen());
-}
-
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
 
@@ -13,7 +9,8 @@ class WelcomeScreen extends StatefulWidget {
   State<WelcomeScreen> createState() => _WelcomeScreenState();
 }
 
-class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProviderStateMixin {
+class _WelcomeScreenState extends State<WelcomeScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
@@ -33,17 +30,17 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        // backgroundColor: Colors.white,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.only(top: 150.0, left: 10.0, right: 10.0),
-                child: Center(
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.only(
+                      top: 150.0, left: 10.0, right: 10.0),
+                  child: Center(
                     child: Text(
                       'Best Campgrounds in South Africa',
                       textAlign: TextAlign.center,
@@ -54,69 +51,73 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                       ),
                     ),
                   ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 5.0),
-                child: SizedBox(
-                  height: 400.0,
-                  width: 400.0,
-                  child: Image.asset('images/logo.jpg'),
                 ),
-              ),
-              const SizedBox(height: 10.0,),
-              SizedBox(
-                height: 50,
-                width: MediaQuery.of(context).size.width - 40.0,
-                child: Builder(builder: (BuildContext context) {
-                  return ScaleTransition(
-                    scale: Tween(begin: 0.95, end: 1.0).animate(_controller),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          PageRouteBuilder(
-                            pageBuilder:
-                                (context, animation, secondaryAnimation) =>
-                                LoginScreen(),
-                            transitionsBuilder:
-                                (context, animation, secondaryAnimation, child) {
-                              var begin = const Offset(1.0, 0.0);
-                              var end = Offset.zero;
-                              var curve = Curves.ease;
+                Padding(
+                  padding: const EdgeInsets.only(top: 5.0),
+                  child: SizedBox(
+                    height: 400.0,
+                    width: 400.0,
+                    child: Image.asset('images/logo.jpg'),
+                  ),
+                ),
+                const SizedBox(
+                  height: 10.0,
+                ),
+                SizedBox(
+                  height: 50,
+                  width: MediaQuery.of(context).size.width - 40.0,
+                  child: Builder(builder: (BuildContext context) {
+                    return ScaleTransition(
+                      scale: Tween(begin: 0.95, end: 1.0).animate(_controller),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            PageRouteBuilder(
+                              pageBuilder:
+                                  (context, animation, secondaryAnimation) =>
+                                      LoginScreen(),
+                              transitionsBuilder: (context, animation,
+                                  secondaryAnimation, child) {
+                                var begin = const Offset(1.0, 0.0);
+                                var end = Offset.zero;
+                                var curve = Curves.ease;
 
-                              var tween = Tween(begin: begin, end: end)
-                                  .chain(CurveTween(curve: curve));
+                                var tween = Tween(begin: begin, end: end)
+                                    .chain(CurveTween(curve: curve));
 
-                              return SlideTransition(
-                                position: animation.drive(tween),
-                                child: child,
-                              );
-                            },
+                                return SlideTransition(
+                                  position: animation.drive(tween),
+                                  child: child,
+                                );
+                              },
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xfff51957),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
                           ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xfff51957),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Text(
+                          'Sign me up!',
+                          style: GoogleFonts.montserrat(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                      child: Text(
-                        'Sign me up!',
-                        style: GoogleFonts.montserrat(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-              const SizedBox(height: 10,)
-            ],
+                    );
+                  }),
+                ),
+                const SizedBox(
+                  height: 10,
+                )
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
   }
 }
