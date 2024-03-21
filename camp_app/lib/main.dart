@@ -1,14 +1,19 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'welcome.dart';
 import 'theme_model.dart';
 
+Future<void> resetFirstLaunch() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setBool('isFirstLaunch', true);
+}
+
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await resetFirstLaunch();  // Reset the isFirstLaunch flag
   runApp(
     ChangeNotifierProvider(
       create: (context) => ThemeModel(),
@@ -23,69 +28,61 @@ class MyApp extends StatelessWidget {
   Future<bool> isFirstLaunch() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
-    if (isFirstLaunch) {
-      await prefs.setBool('isFirstLaunch', false);
-    }
     return isFirstLaunch;
   }
 
   @override
   Widget build(BuildContext context) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Flutter Demo',
-          home: FutureBuilder(
-            future: isFirstLaunch(),
-            builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (snapshot.data == true) {
-                  return const WelcomeScreen();
-                } else {
-                  return LandingPage();
-                }
-              } else {
-                return const Scaffold(
-                  body: Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-              }
-            },
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        primaryColor: const Color(0xfff51957),
+        textSelectionTheme: const TextSelectionThemeData(
+          cursorColor: Color(0xfff51957),
+        ),
+        inputDecorationTheme: const InputDecorationTheme(
+          labelStyle: TextStyle(
+            color: Color(0xfff51957),
           ),
-        );
-  }
-}
-
-class LandingPage extends StatelessWidget {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: _auth.authStateChanges(),
-      builder: (BuildContext context, AsyncSnapshot<User?> snapshot) {
-        if (snapshot.connectionState == ConnectionState.active) {
-          User? user = snapshot.data;
-          if (user == null) {
-            return const WelcomeScreen();
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Color(0xfff51957)),
+          ),
+        ),
+      ),
+      home: FutureBuilder<bool>(
+        future: isFirstLaunch(),
+        builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.data == true) {
+              return const WelcomeScreen();
+            } else {
+              return const LandingPage();
+            }
+          } else {
+            return const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
           }
-          return HomeScreen();
-        } else {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
-      },
+        },
+      ),
     );
   }
 }
 
-class HomeScreen extends StatelessWidget {
-  HomeScreen({Key? key}) : super(key: key);
+class LandingPage extends StatelessWidget {
+  const LandingPage({super.key});
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  @override
+  Widget build(BuildContext context) {
+    return const HomeScreen();
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +95,9 @@ class HomeScreen extends StatelessWidget {
             ElevatedButton(
               child: const Text('Sign Out'),
               onPressed: () async {
-                await _auth.signOut();
+                // Set the 'isFirstLaunch' flag to true when the user signs out
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+                await prefs.setBool('isFirstLaunch', true);
               },
             ),
           ],

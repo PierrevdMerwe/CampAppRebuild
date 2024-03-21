@@ -1,4 +1,3 @@
-import 'package:camp_app/register.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
@@ -6,9 +5,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'preferences.dart';
+import 'login.dart';
 
-class LoginScreenColor extends StatelessWidget {
-  const LoginScreenColor({super.key});
+class RegisterScreenColor extends StatelessWidget {
+  const RegisterScreenColor({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -29,13 +29,13 @@ class LoginScreenColor extends StatelessWidget {
           ),
         ),
       ),
-      home: LoginScreen(),
+      home: RegisterScreen(),
     );
   }
 }
 
-class LoginScreen extends StatelessWidget {
-  LoginScreen({Key? key}) : super(key: key);
+class RegisterScreen extends StatelessWidget {
+  RegisterScreen({Key? key}) : super(key: key);
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn googleSignIn = GoogleSignIn();
@@ -51,9 +51,9 @@ class LoginScreen extends StatelessWidget {
   // Continue with Google
   Future<UserCredential> signInWithGoogle() async {
     final GoogleSignInAccount? googleSignInAccount =
-        await googleSignIn.signIn();
+    await googleSignIn.signIn();
     final GoogleSignInAuthentication googleSignInAuthentication =
-        await googleSignInAccount!.authentication;
+    await googleSignInAccount!.authentication;
 
     final AuthCredential credential = GoogleAuthProvider.credential(
       accessToken: googleSignInAuthentication.accessToken,
@@ -61,7 +61,7 @@ class LoginScreen extends StatelessWidget {
     );
 
     final UserCredential userCredential =
-        await _auth.signInWithCredential(credential);
+    await _auth.signInWithCredential(credential);
 
     // Set a flag to indicate the user has just signed in
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -71,12 +71,11 @@ class LoginScreen extends StatelessWidget {
   }
 
   // Sign in with Email and Password
-  Future<UserCredential> signInWithEmail() async {
+  Future<UserCredential> registerWithEmail() async {
     final String email = emailController.text;
     final String password = passwordController.text;
 
-    final UserCredential userCredential =
-        await _auth.signInWithEmailAndPassword(
+    final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
@@ -199,13 +198,13 @@ class LoginScreen extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: () async {
                           try {
-                            await signInWithEmail();
+                            await registerWithEmail();
                             Navigator.push(
                               context,
                               PageRouteBuilder(
                                 pageBuilder:
                                     (context, animation, secondaryAnimation) =>
-                                        const PreferencesScreen(),
+                                const PreferencesScreen(),
                                 transitionsBuilder: (context, animation,
                                     secondaryAnimation, child) {
                                   var begin = const Offset(1.0, 0.0);
@@ -234,7 +233,7 @@ class LoginScreen extends StatelessWidget {
                           ),
                         ),
                         child: Text(
-                          'Sign in',
+                          'Register',
                           style: GoogleFonts.montserrat(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -249,18 +248,18 @@ class LoginScreen extends StatelessWidget {
                         onPressed: () async {
                           // Handle Google sign-in
                           final GoogleSignInAccount? googleUser =
-                              await GoogleSignIn().signIn();
+                          await GoogleSignIn().signIn();
                           if (googleUser != null) {
                             final GoogleSignInAuthentication googleAuth =
-                                await googleUser.authentication;
+                            await googleUser.authentication;
                             final OAuthCredential credential =
-                                GoogleAuthProvider.credential(
+                            GoogleAuthProvider.credential(
                               accessToken: googleAuth.accessToken,
                               idToken: googleAuth.idToken,
                             );
                             try {
                               final UserCredential userCredential =
-                                  await _auth.signInWithCredential(credential);
+                              await _auth.signInWithCredential(credential);
                               // Check if sign-in was successful
                               if (userCredential.user != null) {
                                 // Navigate to PreferencesScreen
@@ -268,7 +267,7 @@ class LoginScreen extends StatelessWidget {
                                   context,
                                   MaterialPageRoute(
                                       builder: (context) =>
-                                          const PreferencesScreen()),
+                                      const PreferencesScreen()),
                                 );
                               }
                             } on FirebaseAuthException catch (e) {
@@ -311,7 +310,7 @@ class LoginScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         Text(
-                          'Don\'t have an account? ',
+                          'Already have an account? ',
                           style: GoogleFonts.montserrat(
                             fontSize: 16.0,
                             color: Colors.black.withOpacity(0.6),
@@ -322,12 +321,12 @@ class LoginScreen extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const RegisterScreenColor(),
+                                builder: (context) => const LoginScreenColor(),
                               ),
                             );
                           },
                           child: Text(
-                            'Register',
+                            'Login',
                             style: GoogleFonts.montserrat(
                               fontSize: 16.0,
                               fontWeight: FontWeight.bold,

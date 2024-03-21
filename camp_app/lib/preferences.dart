@@ -2,6 +2,7 @@ import 'package:camp_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'theme_model.dart';
 
 class PreferencesScreen extends StatefulWidget {
@@ -15,6 +16,18 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
   bool isOtherFeature = false;
   bool isLocationPermission = false;
   bool isStoragePermission = false;
+
+  Future<void> completePreferences() async {
+    // Unset the flag
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('justSignedIn', false);
+
+    // Navigate to LandingPage
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => LandingPage()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -180,14 +193,8 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                     right: 36.0,
                     child: GestureDetector(
                       onTap: () {
-                        if (isOtherFeature ||
-                            isLocationPermission ||
-                            isStoragePermission) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => LandingPage()),
-                          );
+                        if (isOtherFeature || isLocationPermission || isStoragePermission) {
+                          completePreferences();
                         } else {
                           showDialog<void>(
                             context: context,
@@ -216,12 +223,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                                   TextButton(
                                     onPressed: () {
                                       Navigator.pop(context);
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                LandingPage()),
-                                      );
+                                      completePreferences();
                                     },
                                     child: const Text(
                                       'Yes',
@@ -239,9 +241,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                         }
                       },
                       child: Text(
-                        isOtherFeature ||
-                                isLocationPermission ||
-                                isStoragePermission
+                        isOtherFeature || isLocationPermission || isStoragePermission
                             ? 'Continue'
                             : 'Skip',
                         style: GoogleFonts.montserrat(
