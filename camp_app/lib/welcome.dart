@@ -32,6 +32,21 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   Widget build(BuildContext context) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primaryColor: const Color(0xfff51957),
+          textSelectionTheme: const TextSelectionThemeData(
+            cursorColor: Color(0xfff51957),
+          ),
+          inputDecorationTheme: const InputDecorationTheme(
+            labelStyle: TextStyle(
+              color: Color(
+                  0xfff51957),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Color(0xfff51957)),
+            ),
+          ),
+        ),
         home: Scaffold(
           body: Center(
             child: Column(
@@ -76,7 +91,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                             PageRouteBuilder(
                               pageBuilder:
                                   (context, animation, secondaryAnimation) =>
-                                      const LoginScreenColor(),
+                                      LoginScreen(),
                               transitionsBuilder: (context, animation,
                                   secondaryAnimation, child) {
                                 var begin = const Offset(1.0, 0.0);

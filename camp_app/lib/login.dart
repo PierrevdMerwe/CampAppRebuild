@@ -7,42 +7,11 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'preferences.dart';
 
-class LoginScreenColor extends StatelessWidget {
-  const LoginScreenColor({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primaryColor: const Color(0xfff51957),
-        textSelectionTheme: const TextSelectionThemeData(
-          cursorColor: Color(0xfff51957),
-        ),
-        inputDecorationTheme: const InputDecorationTheme(
-          labelStyle: TextStyle(
-            color: Color(
-                0xfff51957),
-          ),
-          focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Color(0xfff51957)),
-          ),
-        ),
-      ),
-      home: LoginScreen(),
-    );
-  }
-}
-
 class LoginScreen extends StatelessWidget {
   LoginScreen({Key? key}) : super(key: key);
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn googleSignIn = GoogleSignIn();
-
-  // Email and Pass focusNodes
-  final FocusNode emailFocusNode = FocusNode();
-  final FocusNode passwordFocusNode = FocusNode();
 
   // Controllers for Email and Pass
   final TextEditingController emailController = TextEditingController();
@@ -88,11 +57,17 @@ class LoginScreen extends StatelessWidget {
       /*
       firebase_auth/wrong-password
       firebase_auth/user-not-found
+
+      Check issues met error codes, en check bug waar input fields clear op next.
       */
 
       return null; // return null if sign-in was successful
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'invalid-credential') {
+      if (e.code == 'user-not-found') {
+        print(e);
+        print(e.code);
+        print(e.credential);
+        print("User not found");
         return 'Please check your credentials again. If you are not a user, consider registering below.';
       }
     }
@@ -182,30 +157,18 @@ class LoginScreen extends StatelessWidget {
                     const SizedBox(height: 40.0),
                     TextField(
                       controller: emailController,
-                      focusNode: emailFocusNode,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Email',
-                        prefixIcon: const Icon(Icons.email),
-                        labelStyle: TextStyle(
-                          color: emailFocusNode.hasFocus
-                              ? const Color(0xfff51957)
-                              : null,
-                        ),
+                        prefixIcon: Icon(Icons.email),
                       ),
                     ),
                     const SizedBox(height: 20.0),
                     TextField(
                       controller: passwordController,
-                      focusNode: passwordFocusNode,
                       obscureText: true,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock),
-                        labelStyle: TextStyle(
-                          color: passwordFocusNode.hasFocus
-                              ? const Color(0xfff51957)
-                              : null,
-                        ),
+                        prefixIcon: Icon(Icons.lock),
                       ),
                     ),
                     const SizedBox(height: 20.0),
@@ -357,7 +320,7 @@ class LoginScreen extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const RegisterScreenColor(),
+                                builder: (context) => RegisterScreen(),
                               ),
                             );
                           },

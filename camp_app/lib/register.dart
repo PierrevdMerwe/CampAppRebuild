@@ -7,42 +7,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'preferences.dart';
 import 'login.dart';
 
-class RegisterScreenColor extends StatelessWidget {
-  const RegisterScreenColor({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primaryColor: const Color(0xfff51957),
-        textSelectionTheme: const TextSelectionThemeData(
-          cursorColor: Color(0xfff51957),
-        ),
-        inputDecorationTheme: const InputDecorationTheme(
-          labelStyle: TextStyle(
-            color: Color(
-                0xfff51957), // This sets the color of the label when the TextField is focused
-          ),
-          focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Color(0xfff51957)),
-          ),
-        ),
-      ),
-      home: RegisterScreen(),
-    );
-  }
-}
-
 class RegisterScreen extends StatelessWidget {
   RegisterScreen({Key? key}) : super(key: key);
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn googleSignIn = GoogleSignIn();
-
-  // Email and Pass focusNodes
-  final FocusNode emailFocusNode = FocusNode();
-  final FocusNode passwordFocusNode = FocusNode();
 
   // Controllers for Email and Pass
   final TextEditingController emailController = TextEditingController();
@@ -165,30 +134,18 @@ class RegisterScreen extends StatelessWidget {
                     const SizedBox(height: 40.0),
                     TextField(
                       controller: emailController,
-                      focusNode: emailFocusNode,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Email',
-                        prefixIcon: const Icon(Icons.email),
-                        labelStyle: TextStyle(
-                          color: emailFocusNode.hasFocus
-                              ? const Color(0xfff51957)
-                              : null,
-                        ),
+                        prefixIcon: Icon(Icons.email),
                       ),
                     ),
                     const SizedBox(height: 20.0),
                     TextField(
                       controller: passwordController,
-                      focusNode: passwordFocusNode,
                       obscureText: true,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock),
-                        labelStyle: TextStyle(
-                          color: passwordFocusNode.hasFocus
-                              ? const Color(0xfff51957)
-                              : null,
-                        ),
+                        prefixIcon: Icon(Icons.lock),
                       ),
                     ),
                     const SizedBox(height: 20.0),
@@ -321,7 +278,7 @@ class RegisterScreen extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const LoginScreenColor(),
+                                builder: (context) => LoginScreen(),
                               ),
                             );
                           },
