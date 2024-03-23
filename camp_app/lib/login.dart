@@ -7,8 +7,15 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'preferences.dart';
 
-class LoginScreen extends StatelessWidget {
-  LoginScreen({Key? key}) : super(key: key);
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({Key? key}) : super(key: key);
+
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  bool _obscureText = true;
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn googleSignIn = GoogleSignIn();
@@ -54,25 +61,17 @@ class LoginScreen extends StatelessWidget {
         password: password,
       );
 
-      /*
-      firebase_auth/wrong-password
-      firebase_auth/user-not-found
-
-      Check issues met error codes, en check bug waar input fields clear op next.
-      */
-
-      return null; // return null if sign-in was successful
+      return null; // Sign-in successful
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        print(e);
-        print(e.code);
-        print(e.credential);
-        print("User not found");
-        return 'Please check your credentials again. If you are not a user, consider registering below.';
+      switch (e.code) {
+        case 'invalid-email':
+          return 'Invalid email address. Please check and try again.';
+        default:
+          return 'Incorrect credentials have been entered, please try again. If you are NOT registered please consider doing so below.';
       }
+    } catch (e) {
+      return 'An unexpected error occurred. Please try again.';
     }
-
-    return 'An unknown error occurred.';
   }
 
   @override
@@ -165,10 +164,20 @@ class LoginScreen extends StatelessWidget {
                     const SizedBox(height: 20.0),
                     TextField(
                       controller: passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
+                      obscureText: _obscureText,
+                      decoration: InputDecoration(
                         labelText: 'Password',
-                        prefixIcon: Icon(Icons.lock),
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: GestureDetector (
+                          onTap: () {
+                            setState(() {
+                              _obscureText = !_obscureText;
+                            });
+                          },
+                          child: Icon(
+                            _obscureText ? Icons.visibility_off : Icons.visibility,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20.0),
@@ -206,7 +215,7 @@ class LoginScreen extends StatelessWidget {
                               PageRouteBuilder(
                                 pageBuilder:
                                     (context, animation, secondaryAnimation) =>
-                                const PreferencesScreen(),
+                                        const PreferencesScreen(),
                                 transitionsBuilder: (context, animation,
                                     secondaryAnimation, child) {
                                   var begin = const Offset(1.0, 0.0);
@@ -262,6 +271,12 @@ class LoginScreen extends StatelessWidget {
                               // Check if sign-in was successful
                               if (userCredential.user != null) {
                                 // Navigate to PreferencesScreen
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Successfully logged in!'),
+                                  ),
+                                );
+                                await Future.delayed(const Duration(seconds: 2));
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -271,7 +286,38 @@ class LoginScreen extends StatelessWidget {
                               }
                             } on FirebaseAuthException {
                               // Handle error
-                              //print(e.message);
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text(
+                                    'Error',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Montserrat',
+                                    ),
+                                  ),
+                                  content: const Text(
+                                    'An unexpected error occurred. Please try again.',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontFamily: 'Montserrat',
+                                    ),
+                                  ),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text(
+                                        'OK',
+                                        style: TextStyle(
+                                          color: Color(0xfff51957),
+                                          fontFamily: 'Montserrat',
+                                          fontSize: 20,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
                             }
                           }
                         },
@@ -320,7 +366,7 @@ class LoginScreen extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => RegisterScreen(),
+                                builder: (context) => const RegisterScreen(),
                               ),
                             );
                           },

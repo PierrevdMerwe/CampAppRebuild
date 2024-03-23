@@ -7,8 +7,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'preferences.dart';
 import 'login.dart';
 
-class RegisterScreen extends StatelessWidget {
-  RegisterScreen({Key? key}) : super(key: key);
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({Key? key}) : super(key: key);
+
+  @override
+  _RegisterScreenState createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  bool _obscureText = true;
+  bool _isPasswordLengthValid = false;
+  bool _isPasswordUppercaseValid = false;
+  bool _isPasswordLowercaseValid = false;
+  bool _isPasswordNumberValid = false;
+  bool _isPasswordSpecialCharValid = false;
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn googleSignIn = GoogleSignIn();
@@ -20,9 +32,9 @@ class RegisterScreen extends StatelessWidget {
   // Continue with Google
   Future<UserCredential> signInWithGoogle() async {
     final GoogleSignInAccount? googleSignInAccount =
-    await googleSignIn.signIn();
+        await googleSignIn.signIn();
     final GoogleSignInAuthentication googleSignInAuthentication =
-    await googleSignInAccount!.authentication;
+        await googleSignInAccount!.authentication;
 
     final AuthCredential credential = GoogleAuthProvider.credential(
       accessToken: googleSignInAuthentication.accessToken,
@@ -30,7 +42,7 @@ class RegisterScreen extends StatelessWidget {
     );
 
     final UserCredential userCredential =
-    await _auth.signInWithCredential(credential);
+        await _auth.signInWithCredential(credential);
 
     // Set a flag to indicate the user has just signed in
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -39,17 +51,50 @@ class RegisterScreen extends StatelessWidget {
     return userCredential;
   }
 
-  // Sign in with Email and Password
-  Future<UserCredential> registerWithEmail() async {
+  // Register in with Email and Password
+  Future<String?> registerWithEmail() async {
     final String email = emailController.text;
     final String password = passwordController.text;
 
-    final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
+    if (email.isEmpty || password.isEmpty) {
+      return 'Please enter both email and password.';
+    }
 
-    return userCredential;
+    try {
+      await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      return null; // Register successful
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'invalid-email':
+          return 'Invalid email address. Please check and try again.';
+        default:
+          return 'Incorrect credentials have been entered, please try again. If you ARE registered please Login below.';
+      }
+    } catch (e) {
+      return 'An unexpected error occurred. Please try again.';
+    }
+  }
+
+  Widget _buildPasswordRequirement(String requirement, bool isMet) {
+    return Row(
+      children: <Widget>[
+        Text(requirement),
+        const Spacer(),
+        SizedBox(
+          width: 24,
+          height: 24,
+          child: Lottie.asset(
+            'assets/cross-check.json',
+            animate: isMet,
+            repeat: false,
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -142,10 +187,65 @@ class RegisterScreen extends StatelessWidget {
                     const SizedBox(height: 20.0),
                     TextField(
                       controller: passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
+                      obscureText: _obscureText,
+                      onChanged: (value) {
+                        setState(() {
+                          _isPasswordLengthValid = value.length >= 8;
+                          _isPasswordUppercaseValid =
+                              value.contains(RegExp(r'[A-Z]'));
+                          _isPasswordLowercaseValid =
+                              value.contains(RegExp(r'[a-z]'));
+                          _isPasswordNumberValid =
+                              value.contains(RegExp(r'[0-9]'));
+                          _isPasswordSpecialCharValid =
+                              value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+                        });
+                      },
+                      decoration: InputDecoration(
                         labelText: 'Password',
-                        prefixIcon: Icon(Icons.lock),
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _obscureText = !_obscureText;
+                            });
+                          },
+                          child: Icon(
+                            _obscureText
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                        ),
+                      ),
+                    ),
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      height: passwordController.text.isEmpty ? 0 : 120,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: <Widget>[
+                            _buildPasswordRequirement(
+                              'At least 8 characters',
+                              _isPasswordLengthValid,
+                            ),
+                            _buildPasswordRequirement(
+                              'One uppercase',
+                              _isPasswordUppercaseValid,
+                            ),
+                            _buildPasswordRequirement(
+                              'One lowercase',
+                              _isPasswordLowercaseValid,
+                            ),
+                            _buildPasswordRequirement(
+                              'One number',
+                              _isPasswordNumberValid,
+                            ),
+                            _buildPasswordRequirement(
+                              'One special character',
+                              _isPasswordSpecialCharValid,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20.0),
@@ -154,33 +254,76 @@ class RegisterScreen extends StatelessWidget {
                       width: MediaQuery.of(context).size.width - 40.0,
                       child: ElevatedButton(
                         onPressed: () async {
-                          try {
-                            await registerWithEmail();
-                            Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) =>
-                                const PreferencesScreen(),
-                                transitionsBuilder: (context, animation,
-                                    secondaryAnimation, child) {
-                                  var begin = const Offset(1.0, 0.0);
-                                  var end = Offset.zero;
-                                  var curve = Curves.ease;
-
-                                  var tween = Tween(begin: begin, end: end)
-                                      .chain(CurveTween(curve: curve));
-
-                                  return SlideTransition(
-                                    position: animation.drive(tween),
-                                    child: child,
+                          if (_isPasswordLengthValid &&
+                              _isPasswordUppercaseValid &&
+                              _isPasswordLowercaseValid &&
+                              _isPasswordNumberValid &&
+                              _isPasswordSpecialCharValid) {
+                            final String? errorMessage =
+                                await registerWithEmail();
+                            if (errorMessage != null) {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text('Error'),
+                                    content: Text(errorMessage),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text('OK'),
+                                      ),
+                                    ],
                                   );
                                 },
-                              ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Successfully registered!'),
+                                ),
+                              );
+                              await Future.delayed(const Duration(seconds: 2));
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder: (context, animation,
+                                          secondaryAnimation) =>
+                                      const PreferencesScreen(),
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    var begin = const Offset(1.0, 0.0);
+                                    var end = Offset.zero;
+                                    var curve = Curves.ease;
+
+                                    var tween = Tween(begin: begin, end: end)
+                                        .chain(CurveTween(curve: curve));
+
+                                    return SlideTransition(
+                                      position: animation.drive(tween),
+                                      child: child,
+                                    );
+                                  },
+                                ),
+                              );
+                            }
+                          } else {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Error'),
+                                  content: const Text(
+                                      'Your password must meet all the requirements.'),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                );
+                              },
                             );
-                          } on FirebaseAuthException catch (e) {
-                            // Handle error
-                            print(e.message);
                           }
                         },
                         style: ElevatedButton.styleFrom(
@@ -205,31 +348,68 @@ class RegisterScreen extends StatelessWidget {
                         onPressed: () async {
                           // Handle Google sign-in
                           final GoogleSignInAccount? googleUser =
-                          await GoogleSignIn().signIn();
+                              await GoogleSignIn().signIn();
                           if (googleUser != null) {
                             final GoogleSignInAuthentication googleAuth =
-                            await googleUser.authentication;
+                                await googleUser.authentication;
                             final OAuthCredential credential =
-                            GoogleAuthProvider.credential(
+                                GoogleAuthProvider.credential(
                               accessToken: googleAuth.accessToken,
                               idToken: googleAuth.idToken,
                             );
                             try {
                               final UserCredential userCredential =
-                              await _auth.signInWithCredential(credential);
+                                  await _auth.signInWithCredential(credential);
                               // Check if sign-in was successful
                               if (userCredential.user != null) {
                                 // Navigate to PreferencesScreen
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Successfully logged in!'),
+                                  ),
+                                );
+                                await Future.delayed(
+                                    const Duration(seconds: 2));
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                       builder: (context) =>
-                                      const PreferencesScreen()),
+                                          const PreferencesScreen()),
                                 );
                               }
-                            } on FirebaseAuthException catch (e) {
-                              // Handle error
-                              print(e.message);
+                            } on FirebaseAuthException {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text(
+                                    'Error',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Montserrat',
+                                    ),
+                                  ),
+                                  content: const Text(
+                                    'An unexpected error occurred. Please try again.',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontFamily: 'Montserrat',
+                                    ),
+                                  ),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text(
+                                        'OK',
+                                        style: TextStyle(
+                                          color: Color(0xfff51957),
+                                          fontFamily: 'Montserrat',
+                                          fontSize: 20,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
                             }
                           }
                         },
@@ -278,7 +458,7 @@ class RegisterScreen extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => LoginScreen(),
+                                builder: (context) => const LoginScreen(),
                               ),
                             );
                           },

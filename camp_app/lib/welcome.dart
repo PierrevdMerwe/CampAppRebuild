@@ -91,7 +91,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                             PageRouteBuilder(
                               pageBuilder:
                                   (context, animation, secondaryAnimation) =>
-                                      LoginScreen(),
+                                      const LoginScreen(),
                               transitionsBuilder: (context, animation,
                                   secondaryAnimation, child) {
                                 var begin = const Offset(1.0, 0.0);
