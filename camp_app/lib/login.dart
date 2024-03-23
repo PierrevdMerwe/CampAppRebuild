@@ -22,7 +22,7 @@ class LoginScreenColor extends StatelessWidget {
         inputDecorationTheme: const InputDecorationTheme(
           labelStyle: TextStyle(
             color: Color(
-                0xfff51957), // This sets the color of the label when the TextField is focused
+                0xfff51957),
           ),
           focusedBorder: UnderlineInputBorder(
             borderSide: BorderSide(color: Color(0xfff51957)),
@@ -71,17 +71,33 @@ class LoginScreen extends StatelessWidget {
   }
 
   // Sign in with Email and Password
-  Future<UserCredential> signInWithEmail() async {
+  Future<String?> signInWithEmail() async {
     final String email = emailController.text;
     final String password = passwordController.text;
 
-    final UserCredential userCredential =
-        await _auth.signInWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
+    if (email.isEmpty || password.isEmpty) {
+      return 'Please enter both email and password.';
+    }
 
-    return userCredential;
+    try {
+      await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      /*
+      firebase_auth/wrong-password
+      firebase_auth/user-not-found
+      */
+
+      return null; // return null if sign-in was successful
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'invalid-credential') {
+        return 'Please check your credentials again. If you are not a user, consider registering below.';
+      }
+    }
+
+    return 'An unknown error occurred.';
   }
 
   @override
@@ -198,14 +214,36 @@ class LoginScreen extends StatelessWidget {
                       width: MediaQuery.of(context).size.width - 40.0,
                       child: ElevatedButton(
                         onPressed: () async {
-                          try {
-                            await signInWithEmail();
+                          final String? errorMessage = await signInWithEmail();
+                          if (errorMessage != null) {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Error'),
+                                  content: Text(errorMessage),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Successfully logged in!'),
+                              ),
+                            );
+                            await Future.delayed(const Duration(seconds: 2));
                             Navigator.push(
                               context,
                               PageRouteBuilder(
                                 pageBuilder:
                                     (context, animation, secondaryAnimation) =>
-                                        const PreferencesScreen(),
+                                const PreferencesScreen(),
                                 transitionsBuilder: (context, animation,
                                     secondaryAnimation, child) {
                                   var begin = const Offset(1.0, 0.0);
@@ -222,9 +260,6 @@ class LoginScreen extends StatelessWidget {
                                 },
                               ),
                             );
-                          } on FirebaseAuthException catch (e) {
-                            // Handle error
-                            print(e.message);
                           }
                         },
                         style: ElevatedButton.styleFrom(
@@ -271,9 +306,9 @@ class LoginScreen extends StatelessWidget {
                                           const PreferencesScreen()),
                                 );
                               }
-                            } on FirebaseAuthException catch (e) {
+                            } on FirebaseAuthException {
                               // Handle error
-                              print(e.message);
+                              //print(e.message);
                             }
                           }
                         },

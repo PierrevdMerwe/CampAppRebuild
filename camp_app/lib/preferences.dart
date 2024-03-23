@@ -25,7 +25,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
     // Navigate to LandingPage
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => LandingPage()),
+      MaterialPageRoute(builder: (context) => const LandingPage()),
     );
   }
 

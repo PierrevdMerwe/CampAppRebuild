@@ -13,7 +13,7 @@ Future<void> resetFirstLaunch() async {
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  await resetFirstLaunch();  // Reset the isFirstLaunch flag
+  await resetFirstLaunch();
   runApp(
     ChangeNotifierProvider(
       create: (context) => ThemeModel(),
