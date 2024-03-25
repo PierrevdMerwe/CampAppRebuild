@@ -43,6 +43,7 @@ dependencies:
   google_sign_in: ^6.2.1
   provider: ^6.1.2
   shared_preferences: ^2.2.2
+  permission_handler: ^11.3.0
 
 dev_dependencies:
   flutter_test:
@@ -73,6 +74,7 @@ flutter:
    - images/apple.png
    - assets/sign.json
    - assets/register.json
+   - assets/gears.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

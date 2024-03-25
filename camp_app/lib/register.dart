@@ -14,13 +14,25 @@ class RegisterScreen extends StatefulWidget {
   _RegisterScreenState createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStateMixin {
   bool _obscureText = true;
   bool _isPasswordLengthValid = false;
   bool _isPasswordUppercaseValid = false;
   bool _isPasswordLowercaseValid = false;
   bool _isPasswordNumberValid = false;
   bool _isPasswordSpecialCharValid = false;
+
+  late final List<AnimationController> _controllers; // Define _controllers here
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controllers = List.generate(
+      5,
+          (_) => AnimationController(vsync: this, duration: const Duration(milliseconds: 800)),
+    );
+  }
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn googleSignIn = GoogleSignIn();
@@ -79,7 +91,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  Widget _buildPasswordRequirement(String requirement, bool isMet) {
+  Widget _buildPasswordRequirement(String requirement, bool isMet, int index) {
+    // Update the controller's progress when the requirement's status changes
+    WidgetsBinding.instance!.addPostFrameCallback((_) {
+      if (isMet) {
+        _controllers[index].forward(); // Animate to the end
+      } else {
+        _controllers[index].reverse(); // Animate to the start
+      }
+    });
+
     return Row(
       children: <Widget>[
         Text(requirement),
@@ -89,8 +110,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           height: 24,
           child: Lottie.asset(
             'assets/register.json',
-            animate: isMet,
-            repeat: false,
+            controller: _controllers[index], // Use the controller
           ),
         ),
       ],
@@ -227,22 +247,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             _buildPasswordRequirement(
                               'At least 8 characters',
                               _isPasswordLengthValid,
+                              0,
                             ),
                             _buildPasswordRequirement(
                               'One uppercase',
                               _isPasswordUppercaseValid,
+                              1,
                             ),
                             _buildPasswordRequirement(
                               'One lowercase',
                               _isPasswordLowercaseValid,
+                              2,
                             ),
                             _buildPasswordRequirement(
                               'One number',
                               _isPasswordNumberValid,
+                              3,
                             ),
                             _buildPasswordRequirement(
                               'One special character',
                               _isPasswordSpecialCharValid,
+                              4,
                             ),
                           ],
                         ),
@@ -492,5 +517,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       ),
     );
+  }
+  @override
+  void dispose() {
+    // Dispose of the AnimationControllers
+    for (var controller in _controllers) {
+      controller.dispose();
+    }
+    super.dispose();
   }
 }
