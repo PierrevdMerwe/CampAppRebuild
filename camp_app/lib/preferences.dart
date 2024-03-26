@@ -1,4 +1,3 @@
-import 'package:camp_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'theme_model.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'home.dart';
 
 class PreferencesScreen extends StatefulWidget {
   const PreferencesScreen({super.key});
@@ -25,9 +25,9 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
     await prefs.setBool('justSignedIn', false);
 
     // Navigate to LandingPage
-    Navigator.push(
-      context,
+    Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => const LandingPage()),
+      (Route<dynamic> route) => false,
     );
   }
 
@@ -91,12 +91,19 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                   ),
                 ),
                 Lottie.asset('assets/gears.json', width: 70, height: 70),
-                const SizedBox(height: 60,),
+                const SizedBox(
+                  height: 60,
+                ),
                 Padding(
-                  padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.03),
+                  padding: EdgeInsets.only(
+                      left: MediaQuery.of(context).size.width * 0.03),
                   child: const Align(
                     alignment: Alignment.centerLeft,
-                    child: Text('Features', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xfff51957))),
+                    child: Text('Features',
+                        style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xfff51957))),
                   ),
                 ),
                 Padding(
@@ -142,12 +149,19 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                   inactiveTrackColor: Colors.grey,
                   inactiveThumbColor: Colors.white,
                 ),
-                const SizedBox(height: 60,),
+                const SizedBox(
+                  height: 60,
+                ),
                 Padding(
-                  padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.03),
+                  padding: EdgeInsets.only(
+                      left: MediaQuery.of(context).size.width * 0.03),
                   child: const Align(
                     alignment: Alignment.centerLeft,
-                    child: Text('Permissions', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xfff51957))),
+                    child: Text('Permissions',
+                        style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xfff51957))),
                   ),
                 ),
                 Padding(
@@ -168,7 +182,8 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                   activeTrackColor: const Color(0xfff51957),
                   onChanged: (value) async {
                     if (value) {
-                      PermissionStatus status = await Permission.location.request();
+                      PermissionStatus status =
+                          await Permission.location.request();
                       setState(() {
                         isLocationPermission = status.isGranted;
                       });
@@ -194,7 +209,8 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                   activeTrackColor: const Color(0xfff51957),
                   onChanged: (value) async {
                     if (value) {
-                      PermissionStatus status = await Permission.storage.request();
+                      PermissionStatus status =
+                          await Permission.storage.request();
                       setState(() {
                         isStoragePermission = status.isGranted;
                       });
@@ -236,9 +252,16 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                                   color: Colors.black,
                                 ),
                                 children: <TextSpan>[
-                                  TextSpan(text: 'We respect your decision to not allow us permission. Please note that this can be changed later on in '),
-                                  TextSpan(text: 'Settings', style: TextStyle(fontWeight: FontWeight.bold)),
-                                  TextSpan(text: ' as this can make the app\'s experience better.'),
+                                  TextSpan(
+                                      text:
+                                          'We respect your decision to not allow us permission. Please note that this can be changed later on in '),
+                                  TextSpan(
+                                      text: 'Settings',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                  TextSpan(
+                                      text:
+                                          ' as this can make the app\'s experience better.'),
                                 ],
                               ),
                             ),
@@ -276,9 +299,9 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                   },
                   child: Text(
                     themeModel.isDark ||
-                        isOtherFeature ||
-                        isLocationPermission ||
-                        isStoragePermission
+                            isOtherFeature ||
+                            isLocationPermission ||
+                            isStoragePermission
                         ? 'Continue'
                         : 'Skip',
                     style: GoogleFonts.montserrat(

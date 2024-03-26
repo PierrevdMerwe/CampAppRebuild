@@ -72,9 +72,12 @@ flutter:
    - images/logo.jpg
    - images/google_logo.png
    - images/apple.png
+   - images/homepage_banner.jpg
+   - images/placeholder_image.png
    - assets/sign.json
    - assets/register.json
    - assets/gears.json
+   - assets/menu.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

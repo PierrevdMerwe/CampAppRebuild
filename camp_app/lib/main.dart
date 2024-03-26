@@ -4,10 +4,11 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'welcome.dart';
 import 'theme_model.dart';
+import 'home.dart';
 
 Future<void> resetFirstLaunch() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  await prefs.setBool('isFirstLaunch', true);
+  await prefs.setBool('isFirstLaunch', true); // true = each launch is like first time, false = after setup process / not first time.
 }
 
 Future main() async {
@@ -67,41 +68,6 @@ class MyApp extends StatelessWidget {
             );
           }
         },
-      ),
-    );
-  }
-}
-
-class LandingPage extends StatelessWidget {
-  const LandingPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const HomeScreen();
-  }
-}
-
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('Hello'),
-            ElevatedButton(
-              child: const Text('Sign Out'),
-              onPressed: () async {
-                // Set the 'isFirstLaunch' flag to true when the user signs out
-                SharedPreferences prefs = await SharedPreferences.getInstance();
-                await prefs.setBool('isFirstLaunch', true);
-              },
-            ),
-          ],
-        ),
       ),
     );
   }
