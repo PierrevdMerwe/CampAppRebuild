@@ -44,6 +44,9 @@ dependencies:
   provider: ^6.1.2
   shared_preferences: ^2.2.2
   permission_handler: ^11.3.0
+  cloud_firestore: ^4.15.10
+  firebase_storage: ^11.6.11
+  shimmer: ^3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -74,6 +77,15 @@ flutter:
    - images/apple.png
    - images/homepage_banner.jpg
    - images/placeholder_image.png
+   - images/western_cape.png
+   - images/northern_cape.png
+   - images/north_west.png
+   - images/mpumalanga.png
+   - images/limpopo.png
+   - images/kzn.png
+   - images/gauteng.png
+   - images/free_state.jpg
+   - images/eastern_cape.png
    - assets/sign.json
    - assets/register.json
    - assets/gears.json
