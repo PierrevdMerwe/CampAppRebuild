@@ -8,7 +8,7 @@ import 'home.dart';
 
 Future<void> resetFirstLaunch() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  await prefs.setBool('isFirstLaunch', true); // true = each launch is like first time, false = after setup process / not first time.
+  await prefs.setBool('isFirstLaunch', false); // true = each launch is like first time, false = after setup process / not first time.
 }
 
 Future main() async {

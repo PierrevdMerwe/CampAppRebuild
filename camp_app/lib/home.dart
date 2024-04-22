@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:camp_app/search_result.dart';
 import 'package:camp_app/theme_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -715,24 +716,93 @@ class _HomeScreenState extends State<HomeScreen>
 }
 
 class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
+  final TextEditingController _searchController = TextEditingController();
+
   @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
       color: Theme.of(context).scaffoldBackgroundColor,
       padding: EdgeInsets.symmetric(
           horizontal: MediaQuery.of(context).size.width * 0.05),
-      child: TextField(
-        decoration: InputDecoration(
-          labelText: 'What are you looking for?',
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15.0),
-            borderSide: BorderSide(color: Colors.grey[900]!),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                labelText: 'What are you looking for?',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15.0),
+                  borderSide: BorderSide(color: Colors.grey[900]!),
+                ),
+              ),
+            ),
           ),
-        ),
+          if (_searchController.text.isNotEmpty)
+            Container(
+              height: 40.0, // Adjust as needed
+              decoration: BoxDecoration(
+                color: const Color(0xfff51957),
+                borderRadius: BorderRadius.circular(15.0), // 15% border radius
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.search, color: Colors.white),
+                onPressed: () async {
+                  // Perform the search
+                  List<String> results = await performSearch(_searchController.text);
+                  // Navigate to the search screen with the results
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SearchScreen(results)),
+                  );
+                },
+                padding: EdgeInsets.zero,
+              ),
+            ),
+        ],
       ),
     );
   }
+
+
+  Future<List<String>> performSearch(String query) async {
+    query = query.toLowerCase();
+    List<String> results = [];
+
+    await FirebaseFirestore.instance.collection('sites').get().then((querySnapshot) {
+      for (var doc in querySnapshot.docs) {
+        var data = doc.data();
+        bool found = false;
+
+        // Check 'fall_under' field
+        if (data['fall_under'] != null && data['fall_under'].map((e) => e.toString().toLowerCase()).contains(query)) {
+          found = true;
+        }
+
+        // Check 'main_fall_under' field
+        if (data['main_fall_under'] != null && data['main_fall_under'].toLowerCase().contains(query)) {
+          found = true;
+        }
+
+        // Check 'name' field
+        if (data['name'] != null && data['name'].toLowerCase().contains(query)) {
+          found = true;
+        }
+
+        // Check 'tags' field
+        if (data['tags'] != null && data['tags'].map((e) => e.toString().toLowerCase()).contains(query)) {
+          found = true;
+        }
+
+        if (found) {
+          results.add(doc['name']);
+        }
+      }
+    });
+
+    return results;
+  }
+
 
   @override
   double get maxExtent => 60.0;
@@ -743,3 +813,4 @@ class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(_SearchBarDelegate oldDelegate) => false;
 }
+
