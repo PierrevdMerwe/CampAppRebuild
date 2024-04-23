@@ -747,13 +747,11 @@ class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
               ),
               child: IconButton(
                 icon: const Icon(Icons.search, color: Colors.white),
-                onPressed: () async {
-                  // Perform the search
-                  List<String> results = await performSearch(_searchController.text);
-                  // Navigate to the search screen with the results
+                onPressed: () {
+                  // Navigate to the search screen with the query
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => SearchScreen(results)),
+                    MaterialPageRoute(builder: (context) => SearchScreen(_searchController.text)),
                   );
                 },
                 padding: EdgeInsets.zero,
@@ -763,46 +761,6 @@ class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
       ),
     );
   }
-
-
-  Future<List<String>> performSearch(String query) async {
-    query = query.toLowerCase();
-    List<String> results = [];
-
-    await FirebaseFirestore.instance.collection('sites').get().then((querySnapshot) {
-      for (var doc in querySnapshot.docs) {
-        var data = doc.data();
-        bool found = false;
-
-        // Check 'fall_under' field
-        if (data['fall_under'] != null && data['fall_under'].map((e) => e.toString().toLowerCase()).contains(query)) {
-          found = true;
-        }
-
-        // Check 'main_fall_under' field
-        if (data['main_fall_under'] != null && data['main_fall_under'].toLowerCase().contains(query)) {
-          found = true;
-        }
-
-        // Check 'name' field
-        if (data['name'] != null && data['name'].toLowerCase().contains(query)) {
-          found = true;
-        }
-
-        // Check 'tags' field
-        if (data['tags'] != null && data['tags'].map((e) => e.toString().toLowerCase()).contains(query)) {
-          found = true;
-        }
-
-        if (found) {
-          results.add(doc['name']);
-        }
-      }
-    });
-
-    return results;
-  }
-
 
   @override
   double get maxExtent => 60.0;
