@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 class SearchScreen extends StatefulWidget {
   final String query;
@@ -24,16 +26,16 @@ class _SearchScreenState extends State<SearchScreen> {
   Future<String?> _getPreviewImageUrl(DocumentSnapshot campsite) async {
     final storage = FirebaseStorage.instance;
     final sitesFolderRef =
-    storage.ref().child('sites'); // Access the 'sites' folder
+        storage.ref().child('sites'); // Access the 'sites' folder
     final campsiteFolderRef = sitesFolderRef
         .child(campsite.id); // Access the specific campsite folder
     final result = await campsiteFolderRef.listAll();
     final imageItems = result.items
         .where((item) =>
-    item.fullPath.toLowerCase().endsWith('.jpg') ||
-        item.fullPath.toLowerCase().endsWith('.jpeg') ||
-        item.fullPath.toLowerCase().endsWith('.webp') ||
-        item.fullPath.toLowerCase().endsWith('.png'))
+            item.fullPath.toLowerCase().endsWith('.jpg') ||
+            item.fullPath.toLowerCase().endsWith('.jpeg') ||
+            item.fullPath.toLowerCase().endsWith('.webp') ||
+            item.fullPath.toLowerCase().endsWith('.png'))
         .toList();
     if (imageItems.isNotEmpty) {
       final previewImageRef = imageItems.first;
@@ -95,7 +97,8 @@ class _SearchScreenState extends State<SearchScreen> {
                         child: const Row(
                           children: [
                             Icon(Icons.filter_list, color: Colors.white),
-                            Text('Filter', style: TextStyle(color: Colors.white)),
+                            Text('Filter',
+                                style: TextStyle(color: Colors.white)),
                           ],
                         ),
                       ),
@@ -131,7 +134,13 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
                       DropdownButton<String>(
                         hint: const Text('Sort by'),
-                        items: <String>['Price: Low to High', 'Price: High to Low', 'Rating', 'A-Z', 'Z-A'].map((String value) {
+                        items: <String>[
+                          'Price: Low to High',
+                          'Price: High to Low',
+                          'Rating',
+                          'A-Z',
+                          'Z-A'
+                        ].map((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
                             child: Text(value),
@@ -163,59 +172,103 @@ class _SearchScreenState extends State<SearchScreen> {
                           } else if (imageSnapshot.hasError) {
                             return Text('Error: ${imageSnapshot.error}');
                           } else {
-                            return Card(
-                              elevation: 5.0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15.0),
-                              ),
-                              clipBehavior: Clip.antiAlias,
-                              child: Column(
-                                children: [
-                                  if (imageSnapshot.data != null)
-                                    Image.network(
-                                      imageSnapshot.data!,
-                                      height: 200.0,
-                                      width: double.infinity,
-                                      fit: BoxFit.cover,
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Card(
+                                elevation: 5.0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15.0),
+                                ),
+                                clipBehavior: Clip.antiAlias,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (imageSnapshot.data != null)
+                                      Image.network(
+                                        imageSnapshot.data!,
+                                        height: 200.0,
+                                        width: double.infinity,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          top: 8.0, left: 4),
+                                      child: Text(
+                                        snapshot.data![index]['name'],
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 20.0,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
-                                  ListTile(
-                                    title: Text(snapshot.data![index]['name']),
-                                  ),
-                                  ListTile(
-                                    leading: const Icon(Icons.location_city, color: Color(0xfff51957)),
-                                    title: Text(snapshot.data![index]['province']),
-                                  ),
-                                  ListTile(
-                                    leading: const Icon(Icons.location_pin, color: Color(0xfff51957)),
-                                    title: Text(snapshot.data![index]['main_fall_under']),
-                                  ),
-                                  ListTile(
-                                    leading: const Icon(Icons.phone, color: Color(0xfff51957)),
-                                    title: Text(snapshot.data![index]['telephone']),
-                                  ),
-                                  if (snapshot.data![index]['tags'].contains('Pet Friendly') ||
-                                      snapshot.data![index]['tags'].contains('Pets With Arrangements'))
                                     ListTile(
-                                      leading: const Icon(Icons.pets, color: Color(0xfff51957)),
-                                      title: Text(snapshot.data![index]['tags'].contains('Pet Friendly')
-                                          ? 'Pet Friendly'
-                                          : 'Pets With Arrangements'),
-                                    )
-                                  else
-                                    const ListTile(
-                                      leading: Icon(Icons.do_not_disturb_alt, color: Color(0xfff51957)),
-                                      title: Text('No Pets Allowed'),
+                                      contentPadding:
+                                          const EdgeInsets.only(left: 4),
+                                      leading: const Icon(Icons.location_pin,
+                                          color: Color(0xfff51957)),
+                                      title: Text(
+                                        snapshot.data![index]['main_fall_under'],
+                                        style: GoogleFonts.montserrat(),
+                                      ),
                                     ),
-                                  ListTile(
-                                    leading: const Icon(Icons.check_circle_outline, color: Color(0xfff51957)),
-                                    title: Text(snapshot.data![index]['tags'].contains('Only Campsites')
-                                        ? 'Only Campsites'
-                                        : snapshot.data![index]['tags'].contains('Self Catering') &&
-                                        snapshot.data![index]['tags'].contains('Campsites')
-                                        ? 'Campsites & Self Catering'
-                                        : 'Self Catering'),
-                                  ),
-                                ],
+                                    ListTile(
+                                      contentPadding:
+                                          const EdgeInsets.only(left: 4),
+                                      leading: const Icon(Icons.phone,
+                                          color: Color(0xfff51957)),
+                                      title: Text(
+                                        snapshot.data![index]['telephone'],
+                                        style: GoogleFonts.montserrat(),
+                                      ),
+                                    ),
+                                    if (snapshot.data![index]['tags']
+                                            .contains('Pet Friendly') ||
+                                        snapshot.data![index]['tags']
+                                            .contains('Pets With Arrangements'))
+                                      ListTile(
+                                        contentPadding:
+                                            const EdgeInsets.only(left: 4),
+                                        leading: const Icon(Icons.pets,
+                                            color: Color(0xfff51957)),
+                                        title: Text(
+                                          snapshot.data![index]['tags']
+                                                  .contains('Pet Friendly')
+                                              ? 'Pet Friendly'
+                                              : 'Pets With Arrangements',
+                                          style: GoogleFonts.montserrat(),
+                                        ),
+                                      )
+                                    else
+                                      const ListTile(
+                                        contentPadding: EdgeInsets.only(left: 4),
+                                        leading: Icon(Icons.do_not_disturb_alt,
+                                            color: Color(0xfff51957)),
+                                        title: Text('No Pets Allowed'),
+                                      ),
+                                    ListTile(
+                                      contentPadding:
+                                          const EdgeInsets.only(left: 4),
+                                      leading: const Icon(
+                                          Icons.check_circle_outline,
+                                          color: Color(0xfff51957)),
+                                      title: Text(
+                                        snapshot.data![index]['tags']
+                                                .contains('Only Campsites')
+                                            ? 'Only Campsites'
+                                            : snapshot.data![index]['tags']
+                                                        .contains(
+                                                            'Self Catering') &&
+                                                    snapshot.data![index]['tags']
+                                                        .contains('Campsites')
+                                                ? 'Campsites & Self Catering'
+                                                : 'Self Catering',
+                                        style: GoogleFonts.montserrat(),
+                                      ),
+                                    ),
+                                    const Divider(),
+                                    _buildTagRow(snapshot.data![index]['tags'], snapshot.data![index]['price']),
+                                  ],
+                                ),
                               ),
                             );
                           }
@@ -279,5 +332,120 @@ class _SearchScreenState extends State<SearchScreen> {
     });
 
     return results;
+  }
+
+  Widget _buildTagRow(List<dynamic> tags, String price) {
+    final excludedTags = [
+      'Self Catering',
+      'Pet Friendly',
+      'Only Campsites',
+      'Pets With Arrangements',
+      'Campsites'
+    ];
+    final includedTags =
+        tags.where((tag) => !excludedTags.contains(tag)).toList();
+    final tagIcons = {
+      'Braai Place': Icons.local_fire_department,
+      'Swimming Pool': Icons.pool,
+      'Signal': Icons.signal_cellular_alt,
+      'Fishing': Icons.water,
+      'Hiking': Icons.hiking,
+      'Jacuzzi': Icons.bathtub,
+      'Glamping': Icons.house,
+      'Beach Camping': Icons.beach_access,
+    };
+
+    IconData? icon;
+    String firstTag = '';
+    if (includedTags.isNotEmpty) {
+      firstTag = includedTags[0];
+      icon = tagIcons[firstTag];
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 4.0, bottom: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              if (icon != null)
+                Container(
+                  padding: const EdgeInsets.all(5.0),
+                  decoration: BoxDecoration(
+                    color: const Color(0xfff51957),
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(icon, color: Colors.white),
+                      const SizedBox(width: 5.0),
+                      Text(
+                        firstTag,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 16.0,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(width: 10.0),
+              if (includedTags.length > 1)
+                InkWell(
+                  onTap: () {
+                    if (includedTags.length > 1) {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text('Other Tags'),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: includedTags.skip(1).map((tag) => Text(tag)).toList(),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text('Close'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8.0),
+                    decoration: const BoxDecoration(
+                      color: Color(0xfff51957),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '+${includedTags.length - 1}',
+                      style: GoogleFonts.montserrat(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              'R${NumberFormat("#,##0").format(int.parse(price))}',
+              style: GoogleFonts.montserrat(
+                color: const Color(0xfff51957),
+                fontSize: 18.0,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
