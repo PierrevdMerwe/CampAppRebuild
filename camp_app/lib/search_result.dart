@@ -27,6 +27,7 @@ class _SearchScreenState extends State<SearchScreen> {
   String? locationFilter;
   String? categoryFilter;
   String? receptionFilter;
+  List<DocumentSnapshot> currentResults = [];
 
   // Define your categories/facilities and their corresponding icons
   final Map<String, IconData> categories = {
@@ -52,15 +53,33 @@ class _SearchScreenState extends State<SearchScreen> {
     mapController = controller;
   }
 
+  Future<List<DocumentSnapshot>> sortCurrentResults(String sortOption) async {
+    switch (sortOption) {
+      case 'Price: Low to High':
+        currentResults.sort((a, b) => int.parse(a['price']).compareTo(int.parse(b['price'])));
+        break;
+      case 'Price: High to Low':
+        currentResults.sort((a, b) => int.parse(b['price']).compareTo(int.parse(a['price'])));
+        break;
+      case 'A-Z':
+        currentResults.sort((a, b) => a['name'].compareTo(b['name']));
+        break;
+      case 'Z-A':
+        currentResults.sort((a, b) => b['name'].compareTo(a['name']));
+        break;
+    }
+    return currentResults;
+  }
+
+
   @override
   void initState() {
     super.initState();
     _determinePosition();
     futureResults = performSearch(
       widget.query,
-      sortOption,
       locationFilter,
-      categoryFilter,
+      categoryFilter as List<String>?,
       receptionFilter,
     );
   }
@@ -461,14 +480,33 @@ class _SearchScreenState extends State<SearchScreen> {
                                           style:
                                               TextStyle(color: Colors.white)),
                                       onPressed: () {
+                                        List<String> selectedCategoryFilters = [];
+                                        selectedCategories.forEach((key, value) {
+                                          if (value) {
+                                            selectedCategoryFilters.add(key);
+                                          }
+                                        });
+
                                         this.setState(() {
-                                          futureResults = performSearch(
-                                            widget.query,
-                                            sortOption,
-                                            locationFilter,
-                                            categoryFilter,
-                                            receptionFilter,
-                                          );
+                                          if (locationFilter == null && selectedCategoryFilters.isEmpty && receptionFilter == null) {
+                                            // If all filters are cleared, perform a search with only the original query
+                                            futureResults = performSearch(
+                                              widget.query,
+                                              null,
+                                              null,
+                                              null,
+                                            );
+                                          } else {
+                                            futureResults = performSearch(
+                                              widget.query,
+                                              locationFilter,
+                                              selectedCategoryFilters, // Pass the list of selected categories
+                                              receptionFilter,
+                                            );
+                                          }
+                                          futureResults.then((results) {
+                                            currentResults = results; // Update currentResults with the latest results
+                                          });
                                           Navigator.of(context).pop();
                                         });
                                       },
@@ -541,18 +579,13 @@ class _SearchScreenState extends State<SearchScreen> {
                       onChanged: _showMap
                           ? null
                           : (value) {
-                              setState(() {
-                                sortOption = value;
-                                futureResults = performSearch(
-                                  widget.query,
-                                  sortOption,
-                                  locationFilter,
-                                  categoryFilter,
-                                  receptionFilter,
-                                );
-                              });
-                            },
+                        setState(() {
+                          sortOption = value;
+                          futureResults = sortCurrentResults(sortOption!); // Update futureResults with the sorted results
+                        });
+                      },
                     ),
+
                   ],
                 ),
               ),
@@ -720,12 +753,11 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<List<DocumentSnapshot>> performSearch(
-    String query,
-    String? sortOption,
-    String? locationFilter,
-    String? categoryFilter,
-    String? receptionFilter,
-  ) async {
+      String query,
+      String? locationFilter,
+      List<String>? categoryFilters,
+      String? receptionFilter,
+      ) async {
     query = query.toLowerCase();
     List<DocumentSnapshot> results = [];
 
@@ -735,26 +767,27 @@ class _SearchScreenState extends State<SearchScreen> {
         .then((querySnapshot) {
       for (var doc in querySnapshot.docs) {
         var data = doc.data();
-        bool found = false;
+        bool matchesQuery = false;
+        bool matchesFilters = true;
 
         // Check 'fall_under' field
         if (data['fall_under'] != null &&
             data['fall_under']
                 .map((e) => e.toString().toLowerCase())
                 .contains(query)) {
-          found = true;
+          matchesQuery = true;
         }
 
         // Check 'main_fall_under' field
         if (data['main_fall_under'] != null &&
             data['main_fall_under'].toLowerCase().contains(query)) {
-          found = true;
+          matchesQuery = true;
         }
 
         // Check 'name' field
         if (data['name'] != null &&
             data['name'].toLowerCase().contains(query)) {
-          found = true;
+          matchesQuery = true;
         }
 
         // Check 'tags' field
@@ -762,34 +795,35 @@ class _SearchScreenState extends State<SearchScreen> {
             data['tags']
                 .map((e) => e.toString().toLowerCase())
                 .contains(query)) {
-          found = true;
+          matchesQuery = true;
         }
 
-        if (found) {
+        // Apply location filter
+        if (locationFilter != null &&
+            data['province'] != null &&
+            data['province'].toLowerCase() != locationFilter.toLowerCase()) {
+          matchesFilters = false;
+        }
+
+        // Apply category filter
+        if (categoryFilters != null &&
+            data['tags'] != null &&
+            !categoryFilters.any((filter) => data['tags'].contains(filter))) {
+          matchesFilters = false;
+        }
+
+        // Apply reception filter
+        if (receptionFilter != null &&
+            data['signal'] != null &&
+            data['signal'].toLowerCase() != receptionFilter.toLowerCase()) {
+          matchesFilters = false;
+        }
+
+        if (matchesQuery && matchesFilters) {
           results.add(doc);
         }
       }
     });
-
-    // Sort the results based on the selected sort option
-    if (sortOption != null) {
-      switch (sortOption) {
-        case 'Price: Low to High':
-          results.sort(
-              (a, b) => int.parse(a['price']).compareTo(int.parse(b['price'])));
-          break;
-        case 'Price: High to Low':
-          results.sort(
-              (a, b) => int.parse(b['price']).compareTo(int.parse(a['price'])));
-          break;
-        case 'A-Z':
-          results.sort((a, b) => a['name'].compareTo(b['name']));
-          break;
-        case 'Z-A':
-          results.sort((a, b) => b['name'].compareTo(a['name']));
-          break;
-      }
-    }
 
     return results;
   }
