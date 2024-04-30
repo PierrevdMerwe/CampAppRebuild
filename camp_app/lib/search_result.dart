@@ -9,9 +9,9 @@ import 'campsite_details_page.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class SearchScreen extends StatefulWidget {
-  final String query;
+  String query;
 
-  const SearchScreen(this.query, {Key? key}) : super(key: key);
+  SearchScreen(this.query, {Key? key}) : super(key: key);
 
   @override
   _SearchScreenState createState() => _SearchScreenState();
@@ -837,7 +837,7 @@ class _SearchScreenState extends State<SearchScreen> {
       'Campsites'
     ];
     final includedTags =
-        tags.where((tag) => !excludedTags.contains(tag)).toList();
+    tags.where((tag) => !excludedTags.contains(tag)).toList();
     final tagIcons = {
       'Braai Place': Icons.local_fire_department,
       'Swimming Pool': Icons.pool,
@@ -864,24 +864,37 @@ class _SearchScreenState extends State<SearchScreen> {
           Row(
             children: [
               if (icon != null)
-                Container(
-                  padding: const EdgeInsets.all(5.0),
-                  decoration: BoxDecoration(
-                    color: const Color(0xfff51957),
-                    borderRadius: BorderRadius.circular(20.0),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(icon, color: Colors.white),
-                      const SizedBox(width: 5.0),
-                      Text(
-                        firstTag,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 16.0,
-                          color: Colors.white,
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      widget.query = firstTag; // Update the query
+                      futureResults = performSearch(
+                        widget.query,
+                        locationFilter,
+                        categoryFilter as List<String>?,
+                        receptionFilter,
+                      ); // Perform a new search
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(5.0),
+                    decoration: BoxDecoration(
+                      color: const Color(0xfff51957),
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(icon, color: Colors.white),
+                        const SizedBox(width: 5.0),
+                        Text(
+                          firstTag,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 16.0,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               const SizedBox(width: 10.0),
@@ -893,20 +906,50 @@ class _SearchScreenState extends State<SearchScreen> {
                         context: context,
                         builder: (context) {
                           return AlertDialog(
-                            title: const Text('Other Tags'),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: includedTags
-                                  .skip(1)
-                                  .map((tag) => Text(tag))
-                                  .toList(),
+                            title: Text('Other Tags', style: GoogleFonts.montserrat()),
+                            content: SingleChildScrollView(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: includedTags.skip(1).map((tag) {
+                                  return ListTile(
+                                    leading: Row(
+                                      mainAxisSize: MainAxisSize.min, // This will make the Row as small as possible
+                                      children: [
+                                        Icon(tagIcons[tag] ?? Icons.tag), // Use the corresponding icon
+                                        const SizedBox(width: 5), // Adjust the space as needed
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                            setState(() {
+                                              widget.query = tag; // Update the query
+                                              futureResults = performSearch(
+                                                widget.query,
+                                                locationFilter,
+                                                categoryFilter as List<String>?,
+                                                receptionFilter,
+                                              ); // Perform a new search
+                                            });
+                                          },
+                                          child: Text(tag, style: GoogleFonts.montserrat(
+                                              fontWeight: FontWeight.bold,
+                                              color: const Color(0xfff51957)
+                                          )),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
                             ),
                             actions: [
                               TextButton(
                                 onPressed: () {
                                   Navigator.of(context).pop();
                                 },
-                                child: const Text('Close'),
+                                child: Text('Close', style: GoogleFonts.montserrat(
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xfff51957)
+                                )),
                               ),
                             ],
                           );
