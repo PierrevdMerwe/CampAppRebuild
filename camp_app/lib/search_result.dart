@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -28,6 +30,11 @@ class _SearchScreenState extends State<SearchScreen> {
   String? categoryFilter;
   String? receptionFilter;
   List<DocumentSnapshot> currentResults = [];
+  int? minPrice;
+  int? maxPrice;
+  final minPriceController = TextEditingController();
+  final maxPriceController = TextEditingController();
+
 
   // Define your categories/facilities and their corresponding icons
   final Map<String, IconData> categories = {
@@ -82,6 +89,9 @@ class _SearchScreenState extends State<SearchScreen> {
       categoryFilter as List<String>?,
       receptionFilter,
     );
+    futureResults.then((results) {
+      currentResults = results; // Update currentResults with the latest results
+    });
   }
 
   Future<void> _determinePosition() async {
@@ -217,6 +227,7 @@ class _SearchScreenState extends State<SearchScreen> {
           showDialog(
             context: context,
             builder: (BuildContext context) {
+              var completer = Completer<void>();
               return FutureBuilder<String?>(
                 future: _getPreviewImageUrl(doc),
                 builder: (context, snapshot) {
@@ -228,48 +239,74 @@ class _SearchScreenState extends State<SearchScreen> {
                   } else {
                     return AlertDialog(
                       title: Text(doc['name']),
-                      content: SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.6,
-                        height: MediaQuery.of(context).size.height * 0.3,
-                        child: Column(
-                          children: [
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting)
-                              Shimmer.fromColors(
-                                baseColor: Colors.grey[300]!,
-                                highlightColor: Colors.grey[100]!,
-                                child: Container(
-                                  width: double.infinity,
-                                  height: 100.0,
-                                  color: Colors.white,
-                                ),
-                              )
-                            else if (snapshot.data != null)
-                              Image.network(snapshot.data!),
-                            const SizedBox(height: 10),
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        CampsiteDetailsPage(doc),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min, // Set to min
+                        children: [
+                          if (snapshot.connectionState == ConnectionState.waiting)
+                            Shimmer.fromColors(
+                              baseColor: Colors.grey[300]!,
+                              highlightColor: Colors.grey[100]!,
+                              child: Container(
+                                width: double.infinity,
+                                height: 100.0,
+                                color: Colors.white,
+                              ),
+                            )
+                          else if (snapshot.data != null)
+                            Image.network(
+                              snapshot.data!,
+                              fit: BoxFit.cover,
+                              loadingBuilder: (BuildContext context, Widget child,
+                                  ImageChunkEvent? loadingProgress) {
+                                if (loadingProgress == null) {
+                                  completer.complete();
+                                  return child;
+                                }
+                                return Center(
+                                  child: CircularProgressIndicator(
+                                    value: loadingProgress.expectedTotalBytes != null
+                                        ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                        : null,
                                   ),
                                 );
                               },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xfff51957),
-                                // background color
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      15), // border radius
-                                ),
-                              ),
-                              child: const Text('View Details',
-                                  style: TextStyle(color: Colors.white)),
                             ),
-                          ],
-                        ),
+                          const SizedBox(height: 10),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'R${NumberFormat("#,##0").format(int.parse(doc['price']))}',
+                              style: GoogleFonts.montserrat(
+                                color: const Color(0xfff51957),
+                                fontSize: 18.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      CampsiteDetailsPage(doc),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xfff51957),
+                              // background color
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                    15), // border radius
+                              ),
+                            ),
+                            child: const Text('View Details',
+                                style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
                       ),
                     );
                   }
@@ -420,6 +457,34 @@ class _SearchScreenState extends State<SearchScreen> {
                                         buildCategoryFacilityButtons(),
                                         const SizedBox(height: 20.0),
                                         // Add some space
+                                        const Text('Price', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Expanded(
+                                              child: TextField(
+                                                controller: minPriceController,
+                                                decoration: const InputDecoration(labelText: 'Min.'),
+                                                keyboardType: TextInputType.number,
+                                                onChanged: (value) {
+                                                  minPrice = int.tryParse(value);
+                                                },
+                                              ),
+                                            ),
+                                            const SizedBox(width: 10.0), // Add some space between the inputs
+                                            Expanded(
+                                              child: TextField(
+                                                controller: maxPriceController,
+                                                decoration: const InputDecoration(labelText: 'Max.'),
+                                                keyboardType: TextInputType.number,
+                                                onChanged: (value) {
+                                                  maxPrice = int.tryParse(value);
+                                                },
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 20.0),
                                         DropdownButton<String>(
                                           value: receptionFilter,
                                           hint:
@@ -452,6 +517,10 @@ class _SearchScreenState extends State<SearchScreen> {
                                         child: const Text('Clear Filters', style: TextStyle(color: Color(0xfff51957))),
                                         onPressed: () {
                                           setState(() {
+                                            minPrice = 0;
+                                            maxPrice = null;
+                                            minPriceController.text = '0';
+                                            maxPriceController.text = '';
                                             locationFilter = null;
                                             categoryFilter = null;
                                             receptionFilter = null;
@@ -469,16 +538,13 @@ class _SearchScreenState extends State<SearchScreen> {
                                     ),
                                     ElevatedButton(
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(
-                                            0xfff51957), // background color
+                                        backgroundColor: const Color(0xfff51957), // background color
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                              15), // border radius
+                                          borderRadius: BorderRadius.circular(15), // border radius
                                         ),
                                       ),
                                       child: const Text('Apply Filters',
-                                          style:
-                                              TextStyle(color: Colors.white)),
+                                          style: TextStyle(color: Colors.white)),
                                       onPressed: () {
                                         List<String> selectedCategoryFilters = [];
                                         selectedCategories.forEach((key, value) {
@@ -488,6 +554,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                         });
 
                                         this.setState(() {
+                                          minPriceController.text = minPrice?.toString() ?? '0';
+                                          maxPriceController.text = maxPrice?.toString() ?? '';
                                           if (locationFilter == null && selectedCategoryFilters.isEmpty && receptionFilter == null) {
                                             // If all filters are cleared, perform a search with only the original query
                                             futureResults = performSearch(
@@ -506,6 +574,9 @@ class _SearchScreenState extends State<SearchScreen> {
                                           }
                                           futureResults.then((results) {
                                             currentResults = results; // Update currentResults with the latest results
+                                            if (sortOption != null) {
+                                              sortCurrentResults(sortOption!); // Sort the results according to the current sort option
+                                            }
                                           });
                                           Navigator.of(context).pop();
                                         });
@@ -817,6 +888,14 @@ class _SearchScreenState extends State<SearchScreen> {
             data['signal'] != null &&
             data['signal'].toLowerCase() != receptionFilter.toLowerCase()) {
           matchesFilters = false;
+        }
+
+        // Apply price filter
+        if (minPrice != null || maxPrice != null) {
+          int price = int.parse(data['price']);
+          if ((minPrice != null && price < minPrice!) || (maxPrice != null && price > maxPrice!)) {
+            matchesFilters = false;
+          }
         }
 
         if (matchesQuery && matchesFilters) {
