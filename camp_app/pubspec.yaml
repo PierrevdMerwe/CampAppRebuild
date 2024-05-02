@@ -51,6 +51,7 @@ dependencies:
   google_maps_flutter: ^2.2.8
   geolocator: ^11.0.0
   font_awesome_flutter: ^10.7.0
+  carousel_slider: ^4.2.1
 
 dev_dependencies:
   flutter_test:
