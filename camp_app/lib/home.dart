@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:camp_app/search_result.dart';
 import 'package:camp_app/theme_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
+import 'campsite_details_page.dart';
 
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
@@ -320,61 +320,71 @@ class _HomeScreenState extends State<HomeScreen>
                                     ),
                                     child: SizedBox(
                                       width: 250,
-                                      child: Card(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: <Widget>[
-                                              const SizedBox(
-                                                height: 5,
-                                              ),
-                                              Container(
-                                                width: 225,
-                                                height: 100,
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          15.0),
-                                                  image: DecorationImage(
-                                                    image: NetworkImage(
-                                                        snapshot.data!),
-                                                    fit: BoxFit.cover,
-                                                  ),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => CampsiteDetailsPage(document),
+                                            ),
+                                          );
+                                        },
+                                        child: Card(
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: <Widget>[
+                                                const SizedBox(
+                                                  height: 5,
                                                 ),
-                                              ),
-                                              const SizedBox(
-                                                height: 10,
-                                              ),
-                                              Text(
-                                                data['name'],
-                                                style: GoogleFonts.montserrat(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: themeModel.isDark
-                                                      ? Colors.white
-                                                      : Colors.black,
-                                                ),
-                                              ),
-                                              Row(
-                                                children: [
-                                                  const Icon(Icons.location_on,
-                                                      color: Color(0xfff51957)),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    data['main_fall_under'],
-                                                    style:
-                                                        GoogleFonts.montserrat(
-                                                      fontSize: 14,
-                                                      color: themeModel.isDark
-                                                          ? Colors.white
-                                                          : Colors.black,
+                                                Container(
+                                                  width: 225,
+                                                  height: 100,
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            15.0),
+                                                    image: DecorationImage(
+                                                      image: NetworkImage(
+                                                          snapshot.data!),
+                                                      fit: BoxFit.cover,
                                                     ),
                                                   ),
-                                                ],
-                                              ),
-                                            ],
+                                                ),
+                                                const SizedBox(
+                                                  height: 10,
+                                                ),
+                                                Text(
+                                                  data['name'],
+                                                  style: GoogleFonts.montserrat(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: themeModel.isDark
+                                                        ? Colors.white
+                                                        : Colors.black,
+                                                  ),
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    const Icon(Icons.location_on,
+                                                        color: Color(0xfff51957)),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      data['main_fall_under'],
+                                                      style:
+                                                          GoogleFonts.montserrat(
+                                                        fontSize: 14,
+                                                        color: themeModel.isDark
+                                                            ? Colors.white
+                                                            : Colors.black,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -416,9 +426,9 @@ class _HomeScreenState extends State<HomeScreen>
                           if (index == 9) {
                             // If it's the last item, return the button
                             return Padding(
-                              padding: const EdgeInsets.all(20.0),
+                              padding: const EdgeInsets.all(5.0),
                               child: SizedBox(
-                                width: 100, // Increase the width
+                                width: 150, // Increase the width
                                 child: Card(
                                   child: ElevatedButton(
                                     onPressed: () {
@@ -454,88 +464,115 @@ class _HomeScreenState extends State<HomeScreen>
                             );
                           } else {
                             return Padding(
-                              padding: const EdgeInsets.all(20.0),
+                              padding: const EdgeInsets.all(5.0),
                               child: SizedBox(
-                                width: 100, // Increase the width
-                                child: Card(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: <Widget>[
-                                      Icon(
-                                        // Replace with your icons
-                                        index == 0
-                                            ? Icons.waves
-                                            : index == 1
-                                                ? Icons.pets
-                                                : index == 2
-                                                    ? Icons.forest
-                                                    : index == 3
-                                                        ? Icons
-                                                            .local_fire_department
-                                                        : index == 4
-                                                            ? Icons
-                                                                .shopping_cart
-                                                            : index == 5
-                                                                ? Icons.school
-                                                                : index == 6
-                                                                    ? Icons
-                                                                        .local_cafe
-                                                                    : index == 7
-                                                                        ? Icons
-                                                                            .movie
-                                                                        : Icons
-                                                                            .music_note,
-                                        size: 30, // Increase the size
-                                        color: index == 0
-                                            ? Colors.blue
-                                            : index == 1
-                                                ? Colors.brown
-                                                : index == 2
-                                                    ? Colors.green
-                                                    : index == 3
-                                                        ? Colors
-                                                            .deepOrangeAccent
-                                                        : index == 4
-                                                            ? Colors.blue
-                                                            : index == 5
-                                                                ? Colors.indigo
-                                                                : index == 6
-                                                                    ? Colors
-                                                                        .purple
-                                                                    : index == 7
-                                                                        ? Colors
-                                                                            .pink
-                                                                        : Colors
-                                                                            .brown, // Replace with your colors
+                                width: 150, // Increase the width
+                                child: GestureDetector(
+                                  onTap: () {
+                                    String category = index == 0
+                                        ? 'Swimming Pool'
+                                        : index == 1
+                                        ? 'Pets Allowed'
+                                        : index == 2
+                                        ? 'Hiking'
+                                        : index == 3
+                                        ? 'Braai Place'
+                                        : index == 4
+                                        ? 'Jacuzzi'
+                                        : index == 5
+                                        ? 'Glamping'
+                                        : index == 6
+                                        ? 'Signal'
+                                        : index == 7
+                                        ? 'Beach Camping'
+                                        : 'Fishing'; // This is the category name
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => SearchScreen(category),
                                       ),
-                                      Text(
-                                        // Replace with your text labels
-                                        index == 0
-                                            ? 'River'
-                                            : index == 1
-                                                ? 'Pets'
-                                                : index == 2
-                                                    ? 'Bush'
-                                                    : index == 3
-                                                        ? 'Braai'
-                                                        : index == 4
-                                                            ? 'Shopping'
-                                                            : index == 5
-                                                                ? 'School'
-                                                                : index == 6
-                                                                    ? 'Cafe'
-                                                                    : index == 7
-                                                                        ? 'Movie'
-                                                                        : 'Music',
-                                        style: GoogleFonts.montserrat(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: themeModel.isDark
-                                              ? Colors.white
-                                              : Colors.black,
+                                    );
+                                  },
+                                  child: Card(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: <Widget>[
+                                        Icon(
+                                          // Replace with your icons
+                                          index == 0
+                                              ? Icons.waves
+                                              : index == 1
+                                                  ? Icons.pets
+                                                  : index == 2
+                                                      ? Icons.hiking
+                                                      : index == 3
+                                                          ? Icons
+                                                              .local_fire_department
+                                                          : index == 4
+                                                              ? Icons
+                                                                  .bathtub
+                                                              : index == 5
+                                                                  ? Icons.house
+                                                                  : index == 6
+                                                                      ? Icons
+                                                                          .signal_cellular_alt
+                                                                      : index == 7
+                                                                          ? Icons
+                                                                              .beach_access
+                                                                          : Icons
+                                                                              .water_drop,
+                                          size: 30, // Increase the size
+                                          color: index == 0
+                                              ? Colors.blue
+                                              : index == 1
+                                                  ? Colors.brown
+                                                  : index == 2
+                                                      ? Colors.green
+                                                      : index == 3
+                                                          ? Colors
+                                                              .deepOrangeAccent
+                                                          : index == 4
+                                                              ? Colors.blue
+                                                              : index == 5
+                                                                  ? Colors.indigo
+                                                                  : index == 6
+                                                                      ? Colors
+                                                                          .purple
+                                                                      : index == 7
+                                                                          ? Colors
+                                                                              .pink
+                                                                          : Colors
+                                                                              .blueAccent, // Replace with your colors
                                         ),
-                                      ),
-                                    ],
+                                        Text(
+                                          // Replace with your text labels
+                                          index == 0
+                                              ? 'Swimming Pool'
+                                              : index == 1
+                                                  ? 'Pets Allowed'
+                                                  : index == 2
+                                                      ? 'Hiking'
+                                                      : index == 3
+                                                          ? 'Braai Place'
+                                                          : index == 4
+                                                              ? 'Jacuzzi'
+                                                              : index == 5
+                                                                  ? 'Glamping'
+                                                                  : index == 6
+                                                                      ? 'Signal'
+                                                                      : index == 7
+                                                                          ? 'Beach Camping'
+                                                                          : 'Fishing',
+                                          style: GoogleFonts.montserrat(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: themeModel.isDark
+                                                ? Colors.white
+                                                : Colors.black,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
@@ -594,7 +631,7 @@ class _HomeScreenState extends State<HomeScreen>
                               break;
                             case 5:
                               imagePath = 'images/kzn.png';
-                              title = 'Kwazulu-Natal';
+                              title = 'KwaZulu-Natal';
                               break;
                             case 6:
                               imagePath = 'images/gauteng.png';
@@ -618,42 +655,69 @@ class _HomeScreenState extends State<HomeScreen>
                             ),
                             child: SizedBox(
                               width: 250,
-                              child: Card(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      const SizedBox(
-                                        height: 5,
-                                      ),
-                                      Container(
-                                        width: 225,
-                                        height: 100,
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(15.0),
-                                          image: DecorationImage(
-                                            image: AssetImage(imagePath),
-                                            fit: BoxFit.cover,
+                              child: GestureDetector(
+                                onTap: () {
+                                  String location = index == 0
+                                      ? 'Western Cape'
+                                      : index == 1
+                                      ? 'Northern Cape'
+                                      : index == 2
+                                      ? 'North West'
+                                      : index == 3
+                                      ? 'Mpumalanga'
+                                      : index == 4
+                                      ? 'Limpopo'
+                                      : index == 5
+                                      ? 'KwaZulu-Natal'
+                                      : index == 6
+                                      ? 'Gauteng'
+                                      : index == 7
+                                      ? 'Free State'
+                                      : 'Eastern Cape'; // This is the location name
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => SearchScreen(location),
+                                    ),
+                                  );
+                                },
+                                child: Card(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        const SizedBox(
+                                          height: 5,
+                                        ),
+                                        Container(
+                                          width: 225,
+                                          height: 100,
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(15.0),
+                                            image: DecorationImage(
+                                              image: AssetImage(imagePath),
+                                              fit: BoxFit.cover,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      const SizedBox(
-                                        height: 10,
-                                      ),
-                                      Text(
-                                        title,
-                                        style: GoogleFonts.montserrat(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: themeModel.isDark
-                                              ? Colors.white
-                                              : Colors.black,
+                                        const SizedBox(
+                                          height: 10,
                                         ),
-                                      ),
-                                    ],
+                                        Text(
+                                          title,
+                                          style: GoogleFonts.montserrat(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: themeModel.isDark
+                                                ? Colors.white
+                                                : Colors.black,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),

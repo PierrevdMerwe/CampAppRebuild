@@ -78,6 +78,13 @@ class _SearchScreenState extends State<SearchScreen> {
     return currentResults;
   }
 
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is disposed.
+    minPriceController.dispose();
+    maxPriceController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -858,6 +865,12 @@ class _SearchScreenState extends State<SearchScreen> {
         // Check 'name' field
         if (data['name'] != null &&
             data['name'].toLowerCase().contains(query)) {
+          matchesQuery = true;
+        }
+
+        // Check 'province' field
+        if (data['province'] != null &&
+            data['province'].toLowerCase().contains(query)) {
           matchesQuery = true;
         }
 
