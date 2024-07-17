@@ -11,11 +11,11 @@ import 'campsite_details_page.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class SearchScreen extends StatefulWidget {
-  final String query;
+  String query;
   final bool initialShowMap;
   final LatLng? initialCenter;
 
-  const SearchScreen(
+  SearchScreen(
     this.query, {
     Key? key,
     this.initialShowMap = false,
