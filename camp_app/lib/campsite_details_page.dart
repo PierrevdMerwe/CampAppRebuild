@@ -1,8 +1,11 @@
+import 'package:camp_app/search_result.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
 class CampsiteDetailsPage extends StatefulWidget {
@@ -49,129 +52,217 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> {
       appBar: AppBar(
         title: Text('Campsite Details', style: GoogleFonts.montserrat()),
       ),
-      body: FutureBuilder<List<String>>(
-        future: futureImages,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Shimmer.fromColors(
-              baseColor: Colors.grey[300]!,
-              highlightColor: Colors.grey[100]!,
-              child: Container(
-                width: double.infinity,
-                height: MediaQuery.of(context).size.height *
-                    0.4,
-                color: Colors.white,
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return Text('Error: ${snapshot.error}', style: GoogleFonts.montserrat());
-          } else {
-            return Column(
-              children: [
-                Stack(
-                  children: [
-                    CarouselSlider(
-                      options: CarouselOptions(
-                        aspectRatio: 1.5,
-                      ),
-                      items: snapshot.data!.map((imageUrl) {
-                        return Builder(
-                          builder: (BuildContext context) {
-                            return Image.network(imageUrl, fit: BoxFit.cover);
-                          },
-                        );
-                      }).toList(),
-                    ),
-                    Positioned(
-                      right: 10,
-                      bottom: 10,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xfff51957),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
+      body: SingleChildScrollView(
+        child: FutureBuilder<List<String>>(
+          future: futureImages,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Shimmer.fromColors(
+                baseColor: Colors.grey[300]!,
+                highlightColor: Colors.grey[100]!,
+                child: Container(
+                  width: double.infinity,
+                  height: MediaQuery.of(context).size.height *
+                      0.4,
+                  color: Colors.white,
+                ),
+              );
+            } else if (snapshot.hasError) {
+              return Text('Error: ${snapshot.error}', style: GoogleFonts.montserrat());
+            } else {
+              return Column(
+                children: [
+                  Stack(
+                    children: [
+                      CarouselSlider(
+                        options: CarouselOptions(
+                          aspectRatio: 1.5,
                         ),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
+                        items: snapshot.data!.map((imageUrl) {
+                          return Builder(
                             builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: Text(
-                                  'All photos of ${widget.campsite['name']}',
-                                  style: GoogleFonts.montserrat(),
-                                ),
-                                content: SizedBox(
-                                  height: MediaQuery.of(context).size.height *
-                                      0.4,
-                                  child: CarouselSlider(
-                                    options: CarouselOptions(
-                                      aspectRatio: 1.5,
-                                    ),
-                                    items: snapshot.data!.map((imageUrl) {
-                                      return Builder(
-                                        builder: (BuildContext context) {
-                                          return Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 4.0),
-                                            child: Image.network(imageUrl,
-                                                fit: BoxFit.cover),
-                                          );
-                                        },
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: Text('Close',
-                                        style: GoogleFonts.montserrat(
-                                          color: const Color(0xfff51957),
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                  ),
-                                ],
-                              );
+                              return Image.network(imageUrl, fit: BoxFit.cover);
                             },
                           );
-                        },
-                        child: Text('See all photos',
-                            style: GoogleFonts.montserrat(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            )),
+                        }).toList(),
+                      ),
+                      Positioned(
+                        right: 10,
+                        bottom: 10,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xfff51957),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: Text(
+                                    'All photos of ${widget.campsite['name']}',
+                                    style: GoogleFonts.montserrat(),
+                                  ),
+                                  content: SizedBox(
+                                    height: MediaQuery.of(context).size.height *
+                                        0.4,
+                                    child: CarouselSlider(
+                                      options: CarouselOptions(
+                                        aspectRatio: 1.5,
+                                      ),
+                                      items: snapshot.data!.map((imageUrl) {
+                                        return Builder(
+                                          builder: (BuildContext context) {
+                                            return Padding(
+                                              padding: const EdgeInsets.symmetric(
+                                                  horizontal: 4.0),
+                                              child: Image.network(imageUrl,
+                                                  fit: BoxFit.cover),
+                                            );
+                                          },
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: Text('Close',
+                                          style: GoogleFonts.montserrat(
+                                            color: const Color(0xfff51957),
+                                            fontWeight: FontWeight.bold,
+                                          )),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          child: Text('See all photos',
+                              style: GoogleFonts.montserrat(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              )),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '${widget.campsite['name']}',
+                        style: GoogleFonts.montserrat(fontSize: 24, fontWeight: FontWeight.bold),
                       ),
                     ),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      '${widget.campsite['name']}',
-                      style: GoogleFonts.montserrat(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8.0),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'R${NumberFormat("#,##0").format(int.parse(widget.campsite['price']))}',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xfff51957),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
-                  child: Align(
+                  const SizedBox(height: 8.0),
+                  _buildTagRow(widget.campsite['tags']),
+                  const SizedBox(height: 8.0),
+                  Row(
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(left: 8.0, right: 4.0),
+                        child: Icon(Icons.location_on, color: Color(0xfff51957), size: 20),
+                      ),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SearchScreen(
+                                  widget.campsite['main_fall_under'],
+                                  initialShowMap: true,
+                                  initialCenter: LatLng(
+                                    widget.campsite['location'].latitude,
+                                    widget.campsite['location'].longitude,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            widget.campsite['main_fall_under'],
+                            style: GoogleFonts.montserrat(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black, // Changed to black
+                              decoration: TextDecoration.underline,
+                              decorationColor: const Color(0xfff51957),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8.0),
+                  Align(
                     alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Price: ${widget.campsite['price']}',
-                      style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xfff51957)),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: IconButton(
+                        icon: const Icon(Icons.share),
+                        onPressed: () {
+                          // TODO: Implement share functionality
+                        },
+                      ),
                     ),
                   ),
-                ),
-                _buildTagRow(widget.campsite['tags']),
-              ],
-            );
-          }
-        },
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.1),
+                    child: const Divider(thickness: 1),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      widget.campsite['description'] ?? 'No description available',
+                      style: GoogleFonts.montserrat(fontSize: 16),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.1),
+                    child: const Divider(thickness: 1),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.attach_money, color: Color(0xfff51957)),
+                    title: Text(
+                      'Rates From: R${widget.campsite['price']}',
+                      style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.local_fire_department, color: Color(0xfff51957)),
+                    title: Text(
+                      'Campsite Rates Per: TODO: pay per what on firebase?',
+                      style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              );
+            }
+          },
+        ),
       ),
     );
   }

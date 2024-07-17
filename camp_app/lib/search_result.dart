@@ -11,9 +11,16 @@ import 'campsite_details_page.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class SearchScreen extends StatefulWidget {
-  String query;
+  final String query;
+  final bool initialShowMap;
+  final LatLng? initialCenter;
 
-  SearchScreen(this.query, {Key? key}) : super(key: key);
+  const SearchScreen(
+    this.query, {
+    Key? key,
+    this.initialShowMap = false,
+    this.initialCenter,
+  }) : super(key: key);
 
   @override
   _SearchScreenState createState() => _SearchScreenState();
@@ -34,7 +41,6 @@ class _SearchScreenState extends State<SearchScreen> {
   int? maxPrice;
   final minPriceController = TextEditingController();
   final maxPriceController = TextEditingController();
-
 
   // Define your categories/facilities and their corresponding icons
   final Map<String, IconData> categories = {
@@ -63,10 +69,12 @@ class _SearchScreenState extends State<SearchScreen> {
   Future<List<DocumentSnapshot>> sortCurrentResults(String sortOption) async {
     switch (sortOption) {
       case 'Price: Low to High':
-        currentResults.sort((a, b) => int.parse(a['price']).compareTo(int.parse(b['price'])));
+        currentResults.sort(
+            (a, b) => int.parse(a['price']).compareTo(int.parse(b['price'])));
         break;
       case 'Price: High to Low':
-        currentResults.sort((a, b) => int.parse(b['price']).compareTo(int.parse(a['price'])));
+        currentResults.sort(
+            (a, b) => int.parse(b['price']).compareTo(int.parse(a['price'])));
         break;
       case 'A-Z':
         currentResults.sort((a, b) => a['name'].compareTo(b['name']));
@@ -89,6 +97,10 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     super.initState();
+    _showMap = widget.initialShowMap;
+    if (widget.initialCenter != null) {
+      _center = widget.initialCenter!;
+    }
     _determinePosition();
     futureResults = performSearch(
       widget.query,
@@ -249,7 +261,8 @@ class _SearchScreenState extends State<SearchScreen> {
                       content: Column(
                         mainAxisSize: MainAxisSize.min, // Set to min
                         children: [
-                          if (snapshot.connectionState == ConnectionState.waiting)
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting)
                             Shimmer.fromColors(
                               baseColor: Colors.grey[300]!,
                               highlightColor: Colors.grey[100]!,
@@ -263,7 +276,8 @@ class _SearchScreenState extends State<SearchScreen> {
                             Image.network(
                               snapshot.data!,
                               fit: BoxFit.cover,
-                              loadingBuilder: (BuildContext context, Widget child,
+                              loadingBuilder: (BuildContext context,
+                                  Widget child,
                                   ImageChunkEvent? loadingProgress) {
                                 if (loadingProgress == null) {
                                   completer.complete();
@@ -271,9 +285,11 @@ class _SearchScreenState extends State<SearchScreen> {
                                 }
                                 return Center(
                                   child: CircularProgressIndicator(
-                                    value: loadingProgress.expectedTotalBytes != null
-                                        ? loadingProgress.cumulativeBytesLoaded /
-                                        loadingProgress.expectedTotalBytes!
+                                    value: loadingProgress.expectedTotalBytes !=
+                                            null
+                                        ? loadingProgress
+                                                .cumulativeBytesLoaded /
+                                            loadingProgress.expectedTotalBytes!
                                         : null,
                                   ),
                                 );
@@ -306,8 +322,8 @@ class _SearchScreenState extends State<SearchScreen> {
                               backgroundColor: const Color(0xfff51957),
                               // background color
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                    15), // border radius
+                                borderRadius:
+                                    BorderRadius.circular(15), // border radius
                               ),
                             ),
                             child: const Text('View Details',
@@ -388,7 +404,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                           selectedCategories[category] ??
                                               false; // Provide a default value
                                       return ElevatedButton.icon(
-                                        icon: Icon(categories[category], size: 18.0,
+                                        icon: Icon(categories[category],
+                                            size: 18.0,
                                             color: isSelected
                                                 ? Colors.pink.shade50
                                                 : const Color(0xfff51957)),
@@ -405,8 +422,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                               ? const Color(0xfff51957)
                                               : Colors.pink.shade50,
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                                25),
+                                            borderRadius:
+                                                BorderRadius.circular(25),
                                           ),
                                         ),
                                         onPressed: () {
@@ -464,28 +481,41 @@ class _SearchScreenState extends State<SearchScreen> {
                                         buildCategoryFacilityButtons(),
                                         const SizedBox(height: 20.0),
                                         // Add some space
-                                        const Text('Price', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                        const Text('Price',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16)),
                                         Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
                                           children: [
                                             Expanded(
                                               child: TextField(
                                                 controller: minPriceController,
-                                                decoration: const InputDecoration(labelText: 'Min.'),
-                                                keyboardType: TextInputType.number,
+                                                decoration:
+                                                    const InputDecoration(
+                                                        labelText: 'Min.'),
+                                                keyboardType:
+                                                    TextInputType.number,
                                                 onChanged: (value) {
-                                                  minPrice = int.tryParse(value);
+                                                  minPrice =
+                                                      int.tryParse(value);
                                                 },
                                               ),
                                             ),
-                                            const SizedBox(width: 10.0), // Add some space between the inputs
+                                            const SizedBox(width: 10.0),
+                                            // Add some space between the inputs
                                             Expanded(
                                               child: TextField(
                                                 controller: maxPriceController,
-                                                decoration: const InputDecoration(labelText: 'Max.'),
-                                                keyboardType: TextInputType.number,
+                                                decoration:
+                                                    const InputDecoration(
+                                                        labelText: 'Max.'),
+                                                keyboardType:
+                                                    TextInputType.number,
                                                 onChanged: (value) {
-                                                  maxPrice = int.tryParse(value);
+                                                  maxPrice =
+                                                      int.tryParse(value);
                                                 },
                                               ),
                                             ),
@@ -521,7 +551,9 @@ class _SearchScreenState extends State<SearchScreen> {
                                       margin:
                                           const EdgeInsets.only(right: 30.0),
                                       child: TextButton(
-                                        child: const Text('Clear Filters', style: TextStyle(color: Color(0xfff51957))),
+                                        child: const Text('Clear Filters',
+                                            style: TextStyle(
+                                                color: Color(0xfff51957))),
                                         onPressed: () {
                                           setState(() {
                                             minPrice = 0;
@@ -545,25 +577,34 @@ class _SearchScreenState extends State<SearchScreen> {
                                     ),
                                     ElevatedButton(
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(0xfff51957), // background color
+                                        backgroundColor: const Color(
+                                            0xfff51957), // background color
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(15), // border radius
+                                          borderRadius: BorderRadius.circular(
+                                              15), // border radius
                                         ),
                                       ),
                                       child: const Text('Apply Filters',
-                                          style: TextStyle(color: Colors.white)),
+                                          style:
+                                              TextStyle(color: Colors.white)),
                                       onPressed: () {
-                                        List<String> selectedCategoryFilters = [];
-                                        selectedCategories.forEach((key, value) {
+                                        List<String> selectedCategoryFilters =
+                                            [];
+                                        selectedCategories
+                                            .forEach((key, value) {
                                           if (value) {
                                             selectedCategoryFilters.add(key);
                                           }
                                         });
 
                                         this.setState(() {
-                                          minPriceController.text = minPrice?.toString() ?? '0';
-                                          maxPriceController.text = maxPrice?.toString() ?? '';
-                                          if (locationFilter == null && selectedCategoryFilters.isEmpty && receptionFilter == null) {
+                                          minPriceController.text =
+                                              minPrice?.toString() ?? '0';
+                                          maxPriceController.text =
+                                              maxPrice?.toString() ?? '';
+                                          if (locationFilter == null &&
+                                              selectedCategoryFilters.isEmpty &&
+                                              receptionFilter == null) {
                                             // If all filters are cleared, perform a search with only the original query
                                             futureResults = performSearch(
                                               widget.query,
@@ -575,14 +616,17 @@ class _SearchScreenState extends State<SearchScreen> {
                                             futureResults = performSearch(
                                               widget.query,
                                               locationFilter,
-                                              selectedCategoryFilters, // Pass the list of selected categories
+                                              selectedCategoryFilters,
+                                              // Pass the list of selected categories
                                               receptionFilter,
                                             );
                                           }
                                           futureResults.then((results) {
-                                            currentResults = results; // Update currentResults with the latest results
+                                            currentResults =
+                                                results; // Update currentResults with the latest results
                                             if (sortOption != null) {
-                                              sortCurrentResults(sortOption!); // Sort the results according to the current sort option
+                                              sortCurrentResults(
+                                                  sortOption!); // Sort the results according to the current sort option
                                             }
                                           });
                                           Navigator.of(context).pop();
@@ -657,13 +701,13 @@ class _SearchScreenState extends State<SearchScreen> {
                       onChanged: _showMap
                           ? null
                           : (value) {
-                        setState(() {
-                          sortOption = value;
-                          futureResults = sortCurrentResults(sortOption!); // Update futureResults with the sorted results
-                        });
-                      },
+                              setState(() {
+                                sortOption = value;
+                                futureResults = sortCurrentResults(
+                                    sortOption!); // Update futureResults with the sorted results
+                              });
+                            },
                     ),
-
                   ],
                 ),
               ),
@@ -831,11 +875,11 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<List<DocumentSnapshot>> performSearch(
-      String query,
-      String? locationFilter,
-      List<String>? categoryFilters,
-      String? receptionFilter,
-      ) async {
+    String query,
+    String? locationFilter,
+    List<String>? categoryFilters,
+    String? receptionFilter,
+  ) async {
     query = query.toLowerCase();
     List<DocumentSnapshot> results = [];
 
@@ -906,7 +950,8 @@ class _SearchScreenState extends State<SearchScreen> {
         // Apply price filter
         if (minPrice != null || maxPrice != null) {
           int price = int.parse(data['price']);
-          if ((minPrice != null && price < minPrice!) || (maxPrice != null && price > maxPrice!)) {
+          if ((minPrice != null && price < minPrice!) ||
+              (maxPrice != null && price > maxPrice!)) {
             matchesFilters = false;
           }
         }
@@ -929,7 +974,7 @@ class _SearchScreenState extends State<SearchScreen> {
       'Campsites'
     ];
     final includedTags =
-    tags.where((tag) => !excludedTags.contains(tag)).toList();
+        tags.where((tag) => !excludedTags.contains(tag)).toList();
     final tagIcons = {
       'Braai Place': Icons.local_fire_department,
       'Swimming Pool': Icons.pool,
@@ -998,22 +1043,27 @@ class _SearchScreenState extends State<SearchScreen> {
                         context: context,
                         builder: (context) {
                           return AlertDialog(
-                            title: Text('Other Tags', style: GoogleFonts.montserrat()),
+                            title: Text('Other Tags',
+                                style: GoogleFonts.montserrat()),
                             content: SingleChildScrollView(
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: includedTags.skip(1).map((tag) {
                                   return ListTile(
                                     leading: Row(
-                                      mainAxisSize: MainAxisSize.min, // This will make the Row as small as possible
+                                      mainAxisSize: MainAxisSize.min,
+                                      // This will make the Row as small as possible
                                       children: [
-                                        Icon(tagIcons[tag] ?? Icons.tag), // Use the corresponding icon
-                                        const SizedBox(width: 5), // Adjust the space as needed
+                                        Icon(tagIcons[tag] ?? Icons.tag),
+                                        // Use the corresponding icon
+                                        const SizedBox(width: 5),
+                                        // Adjust the space as needed
                                         TextButton(
                                           onPressed: () {
                                             Navigator.of(context).pop();
                                             setState(() {
-                                              widget.query = tag; // Update the query
+                                              widget.query =
+                                                  tag; // Update the query
                                               futureResults = performSearch(
                                                 widget.query,
                                                 locationFilter,
@@ -1022,10 +1072,11 @@ class _SearchScreenState extends State<SearchScreen> {
                                               ); // Perform a new search
                                             });
                                           },
-                                          child: Text(tag, style: GoogleFonts.montserrat(
-                                              fontWeight: FontWeight.bold,
-                                              color: const Color(0xfff51957)
-                                          )),
+                                          child: Text(tag,
+                                              style: GoogleFonts.montserrat(
+                                                  fontWeight: FontWeight.bold,
+                                                  color:
+                                                      const Color(0xfff51957))),
                                         ),
                                       ],
                                     ),
@@ -1038,10 +1089,10 @@ class _SearchScreenState extends State<SearchScreen> {
                                 onPressed: () {
                                   Navigator.of(context).pop();
                                 },
-                                child: Text('Close', style: GoogleFonts.montserrat(
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color(0xfff51957)
-                                )),
+                                child: Text('Close',
+                                    style: GoogleFonts.montserrat(
+                                        fontWeight: FontWeight.bold,
+                                        color: const Color(0xfff51957))),
                               ),
                             ],
                           );
