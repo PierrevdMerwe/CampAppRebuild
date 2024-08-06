@@ -30,25 +30,44 @@ class _HomeScreenState extends State<HomeScreen>
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isMenuOpen = false;
   final StreamController<QuerySnapshot> _streamController = StreamController();
+  final ScrollController _scrollController = ScrollController();
+  Color _textColor = Colors.white;
+  List<DocumentSnapshot> _popularListings = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _scrollController.addListener(_onScroll);
+    _loadPopularListings();
   }
 
-  Future<void> _loadData() async {
-    FirebaseFirestore.instance
-        .collection('sites')
-        .snapshots()
-        .listen((snapshot) {
-      _streamController.add(snapshot);
+  Future<void> _loadPopularListings() async {
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('sites').get();
+      setState(() {
+        _popularListings = snapshot.docs;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _onScroll() {
+    final double offset = _scrollController.offset;
+    setState(() {
+      _textColor = offset > 50 ? const Color(0xfff51957) : Colors.white;
     });
   }
 
   @override
   void dispose() {
     _streamController.close();
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -199,18 +218,40 @@ class _HomeScreenState extends State<HomeScreen>
               ),
               backgroundColor: themeModel.isDark ? Colors.black : Colors.white,
               body: CustomScrollView(
+                controller: _scrollController,
                 slivers: <Widget>[
                   SliverAppBar(
                     expandedHeight: MediaQuery.of(context).size.height * 0.25,
                     pinned: true,
-                    flexibleSpace: FlexibleSpaceBar(
-                      background: Image.asset(
-                        'images/homepage_banner.jpg',
-                        fit: BoxFit.cover,
+                    elevation: 0,
+                    automaticallyImplyLeading: false,
+                    actions: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 10.0, top: 10.0),
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.menu,
+                            color: Color(0xfff51957),
+                            size: 40,
+                          ),
+                          onPressed: () {
+                            if (_isMenuOpen) {
+                              Navigator.of(context).maybePop();
+                            } else {
+                              _scaffoldKey.currentState!.openEndDrawer();
+                            }
+                            setState(() {
+                              _isMenuOpen = !_isMenuOpen;
+                            });
+                          },
+                        ),
                       ),
+                    ],
+                    flexibleSpace: FlexibleSpaceBar(
                       titlePadding: EdgeInsets.only(
                           left: MediaQuery.of(context).size.width * 0.03,
-                          bottom: 16.0),
+                          bottom: 16.0
+                      ),
                       title: Column(
                         mainAxisAlignment: MainAxisAlignment.end,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -220,15 +261,21 @@ class _HomeScreenState extends State<HomeScreen>
                             style: GoogleFonts.montserrat(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
+                              color: _textColor,
                             ),
                           ),
                           Text(
                             'Best Campgrounds in South Africa',
                             style: GoogleFonts.montserrat(
                               fontSize: 16,
+                              color: _textColor,
                             ),
                           ),
                         ],
+                      ),
+                      background: Image.asset(
+                        'images/homepage_banner.jpg',
+                        fit: BoxFit.cover,
                       ),
                     ),
                   ),
@@ -260,139 +307,38 @@ class _HomeScreenState extends State<HomeScreen>
                   SliverToBoxAdapter(
                     child: SizedBox(
                       height: 230,
-                      child: StreamBuilder<QuerySnapshot>(
-                        stream: _streamController.stream,
-                        builder: (BuildContext context,
-                            AsyncSnapshot<QuerySnapshot> snapshot) {
-                          if (snapshot.hasError) {
-                            return Text(
-                              'Something went wrong loading the campsites',
-                              style: GoogleFonts.montserrat(
-                                color: themeModel.isDark
-                                    ? Colors.white
-                                    : Colors.black,
-                              ),
-                            );
-                          }
-
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return Shimmer.fromColors(
-                              baseColor: Colors.grey[300]!,
-                              highlightColor: Colors.grey[100]!,
-                              child: ListView.builder(
-                                itemCount: 9,
-                                scrollDirection: Axis.horizontal,
-                                itemBuilder: (_, __) => Padding(
-                                  padding: const EdgeInsets.all(10.0),
-                                  child: SizedBox(
-                                    width: 250,
-                                    child: Card(child: Container()),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }
-
-                          return ListView(
-                            scrollDirection: Axis.horizontal,
-                            children: snapshot.data!.docs
-                                .map((DocumentSnapshot document) {
-                              Map<String, dynamic> data =
-                                  document.data() as Map<String, dynamic>;
-                              return FutureBuilder<String?>(
-                                future: _getPreviewImageUrl(document),
-                                builder: (context, snapshot) {
-                                  if (snapshot.connectionState ==
-                                      ConnectionState.waiting) {
-                                    return Shimmer.fromColors(
-                                      baseColor: Colors.grey[300]!,
-                                      highlightColor: Colors.grey[100]!,
-                                      child: Container(color: Colors.white),
-                                    );
-                                  }
-                                  return Padding(
-                                    padding: const EdgeInsets.only(
-                                      top: 10.0,
-                                      left: 10.0,
-                                      right: 10.0,
-                                      bottom: 5.0,
-                                    ),
-                                    child: SizedBox(
-                                      width: 250,
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => CampsiteDetailsPage(document),
-                                            ),
-                                          );
-                                        },
-                                        child: Card(
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: <Widget>[
-                                                const SizedBox(
-                                                  height: 5,
-                                                ),
-                                                Container(
-                                                  width: 225,
-                                                  height: 100,
-                                                  decoration: BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            15.0),
-                                                    image: DecorationImage(
-                                                      image: NetworkImage(
-                                                          snapshot.data!),
-                                                      fit: BoxFit.cover,
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(
-                                                  height: 10,
-                                                ),
-                                                Text(
-                                                  data['name'],
-                                                  style: GoogleFonts.montserrat(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: themeModel.isDark
-                                                        ? Colors.white
-                                                        : Colors.black,
-                                                  ),
-                                                ),
-                                                Row(
-                                                  children: [
-                                                    const Icon(Icons.location_on,
-                                                        color: Color(0xfff51957)),
-                                                    const SizedBox(width: 4),
-                                                    Text(
-                                                      data['main_fall_under'],
-                                                      style:
-                                                          GoogleFonts.montserrat(
-                                                        fontSize: 14,
-                                                        color: themeModel.isDark
-                                                            ? Colors.white
-                                                            : Colors.black,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              );
-                            }).toList(),
+                      child: _isLoading
+                          ? Shimmer.fromColors(
+                        baseColor: Colors.grey[300]!,
+                        highlightColor: Colors.grey[100]!,
+                        child: ListView.builder(
+                          itemCount: 9,
+                          scrollDirection: Axis.horizontal,
+                          itemBuilder: (_, __) => Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: SizedBox(
+                              width: 250,
+                              child: Card(child: Container()),
+                            ),
+                          ),
+                        ),
+                      )
+                          : _popularListings.isEmpty
+                          ? Center(
+                        child: Text(
+                          'No popular listings available',
+                          style: GoogleFonts.montserrat(
+                            color: themeModel.isDark ? Colors.white : Colors.black,
+                          ),
+                        ),
+                      )
+                          : ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _popularListings.length,
+                        itemBuilder: (context, index) {
+                          return PopularListingItem(
+                            document: _popularListings[index],
+                            themeModel: themeModel,
                           );
                         },
                       ),
@@ -732,49 +678,148 @@ class _HomeScreenState extends State<HomeScreen>
             );
           },
         ),
-        Positioned(
-          top: 40.0,
-          right: 10.0,
-          child: IconButton(
-            icon: const Icon(
-              Icons.menu,
-              color: Color(0xfff51957),
-              size: 40,
-            ),
-            onPressed: () {
-              if (_isMenuOpen) {
-                Navigator.of(context).maybePop();
-              } else {
-                _scaffoldKey.currentState!.openEndDrawer();
-              }
-              setState(() {
-                _isMenuOpen = !_isMenuOpen;
-              });
-            },
-          ),
-        ),
       ],
     );
   }
+}
+
+class PopularListingItem extends StatefulWidget {
+  final DocumentSnapshot document;
+  final ThemeModel themeModel;
+
+  const PopularListingItem({Key? key, required this.document, required this.themeModel}) : super(key: key);
+
+  @override
+  _PopularListingItemState createState() => _PopularListingItemState();
+}
+
+class _PopularListingItemState extends State<PopularListingItem> with AutomaticKeepAliveClientMixin {
+  String? imageUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadImageUrl();
+  }
+
+  Future<void> _loadImageUrl() async {
+    final url = await _getPreviewImageUrl(widget.document);
+    if (mounted) {
+      setState(() {
+        imageUrl = url;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    Map<String, dynamic> data = widget.document.data() as Map<String, dynamic>;
+
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: 10.0,
+        left: 10.0,
+        right: 10.0,
+        bottom: 5.0,
+      ),
+      child: SizedBox(
+        width: 250,
+        child: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CampsiteDetailsPage(widget.document),
+              ),
+            );
+          },
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const SizedBox(height: 5),
+                  Container(
+                    width: 225,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15.0),
+                    ),
+                    child: imageUrl == null
+                        ? Shimmer.fromColors(
+                      baseColor: Colors.grey[300]!,
+                      highlightColor: Colors.grey[100]!,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15.0),
+                        ),
+                      ),
+                    )
+                        : Image.network(
+                      imageUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Center(child: Text('Error loading image', style: GoogleFonts.montserrat()));
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    data['name'],
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: widget.themeModel.isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on, color: Color(0xfff51957)),
+                      const SizedBox(width: 4),
+                      Text(
+                        data['main_fall_under'],
+                        style: GoogleFonts.montserrat(
+                          fontSize: 14,
+                          color: widget.themeModel.isDark ? Colors.white : Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool get wantKeepAlive => true;
 
   Future<String?> _getPreviewImageUrl(DocumentSnapshot campsite) async {
+    print('_getPreviewImageUrl called for campsite ${campsite.id}');
     final storage = FirebaseStorage.instance;
     final sitesFolderRef =
-        storage.ref().child('sites'); // Access the 'sites' folder
+    storage.ref().child('sites'); // Access the 'sites' folder
     final campsiteFolderRef = sitesFolderRef
         .child(campsite.id); // Access the specific campsite folder
     final result = await campsiteFolderRef.listAll();
     final imageItems = result.items
         .where((item) =>
-            item.fullPath.toLowerCase().endsWith('.jpg') ||
-            item.fullPath.toLowerCase().endsWith('.jpeg') ||
-            item.fullPath.toLowerCase().endsWith('.webp') ||
-            item.fullPath.toLowerCase().endsWith('.png'))
+    item.fullPath.toLowerCase().endsWith('.jpg') ||
+        item.fullPath.toLowerCase().endsWith('.jpeg') ||
+        item.fullPath.toLowerCase().endsWith('.webp') ||
+        item.fullPath.toLowerCase().endsWith('.png'))
         .toList();
     if (imageItems.isNotEmpty) {
       final previewImageRef = imageItems.first;
       return await previewImageRef.getDownloadURL();
     }
+    print('URL fetched for campsite ${campsite.id}');
     return null;
   }
 }
@@ -827,10 +872,10 @@ class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 60.0;
+  double get maxExtent => 56.0;
 
   @override
-  double get minExtent => 60.0;
+  double get minExtent => 56.0;
 
   @override
   bool shouldRebuild(_SearchBarDelegate oldDelegate) => false;
