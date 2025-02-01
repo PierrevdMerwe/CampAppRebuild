@@ -257,7 +257,7 @@ class _HomeScreenState extends State<HomeScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            'LekkeR Kampplekke',
+                            'Campp',
                             style: GoogleFonts.montserrat(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
@@ -265,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen>
                             ),
                           ),
                           Text(
-                            'Best Campgrounds in South Africa',
+                            'The Camp App',
                             style: GoogleFonts.montserrat(
                               fontSize: 16,
                               color: _textColor,

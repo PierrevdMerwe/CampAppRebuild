@@ -57,7 +57,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                       top: 150.0, left: 10.0, right: 10.0),
                   child: Center(
                     child: Text(
-                      'Best Campgrounds in South Africa',
+                      'The Camp App',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.montserrat(
                         fontSize: 24.0,
@@ -120,6 +120,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                           style: GoogleFonts.montserrat(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
+                            fontSize: 24,
                           ),
                         ),
                       ),

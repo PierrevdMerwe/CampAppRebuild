@@ -43,6 +43,17 @@ post_install do |installer|
   end
 
   installer.pods_project.targets.each do |target|
+    # New BoringSSL-GRPC compiler flags fix
+    if target.name == 'BoringSSL-GRPC'
+      target.source_build_phase.files.each do |file|
+        if file.settings && file.settings['COMPILER_FLAGS']
+          flags = file.settings['COMPILER_FLAGS'].split
+          flags.reject! { |flag| flag == '-GCC_WARN_INHIBIT_ALL_WARNINGS' }
+          file.settings['COMPILER_FLAGS'] = flags.join(' ')
+        end
+      end
+    end
+
     flutter_additional_ios_build_settings(target)
 
     # This disables the script phase warnings
