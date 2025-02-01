@@ -59,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen>
   void _onScroll() {
     final double offset = _scrollController.offset;
     setState(() {
-      _textColor = offset > 50 ? const Color(0xfff51957) : Colors.white;
+      _textColor = offset > 50 ? const Color(0xff2e6f40) : Colors.white;
     });
   }
 
@@ -102,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen>
                         style:
                             GoogleFonts.montserrat(fontWeight: FontWeight.bold),
                       ),
-                      iconColor: const Color(0xfff51957),
+                      iconColor: const Color(0xff2e6f40),
                       children: <Widget>[
                         ListTile(
                           leading: const Icon(Icons.place),
@@ -183,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen>
                       child: ElevatedButton(
                         onPressed: () {},
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xfff51957),
+                          backgroundColor: const Color(0xff2e6f40),
                         ),
                         child: Text(
                           'Sign in',
@@ -202,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen>
                       child: ElevatedButton(
                         onPressed: () {},
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xfff51957),
+                          backgroundColor: const Color(0xff2e6f40),
                         ),
                         child: Text(
                           'Add listing',
@@ -231,7 +231,7 @@ class _HomeScreenState extends State<HomeScreen>
                         child: IconButton(
                           icon: const Icon(
                             Icons.menu,
-                            color: Color(0xfff51957),
+                            color: Color(0xff2e6f40),
                             size: 40,
                           ),
                           onPressed: () {
@@ -381,7 +381,7 @@ class _HomeScreenState extends State<HomeScreen>
                                       // Add your onPressed function here
                                     },
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xfff51957),
+                                      backgroundColor: const Color(0xff2e6f40),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(15),
                                       ),
@@ -777,7 +777,7 @@ class _PopularListingItemState extends State<PopularListingItem> with AutomaticK
                   ),
                   Row(
                     children: [
-                      const Icon(Icons.location_on, color: Color(0xfff51957)),
+                      const Icon(Icons.location_on, color: Color(0xff2e6f40)),
                       const SizedBox(width: 4),
                       Text(
                         data['main_fall_under'],
@@ -851,7 +851,7 @@ class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
             Container(
               height: 40.0, // Adjust as needed
               decoration: BoxDecoration(
-                color: const Color(0xfff51957),
+                color: const Color(0xff2e6f40),
                 borderRadius: BorderRadius.circular(15.0), // 15% border radius
               ),
               child: IconButton(

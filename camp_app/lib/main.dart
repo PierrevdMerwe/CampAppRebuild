@@ -38,16 +38,16 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
-        primaryColor: const Color(0xfff51957),
+        primaryColor: const Color(0xff2e6f40),
         textSelectionTheme: const TextSelectionThemeData(
-          cursorColor: Color(0xfff51957),
+          cursorColor: Color(0xff2e6f40),
         ),
         inputDecorationTheme: const InputDecorationTheme(
           labelStyle: TextStyle(
-            color: Color(0xfff51957),
+            color: Color(0xff2e6f40),
           ),
           focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Color(0xfff51957)),
+            borderSide: BorderSide(color: Color(0xff2e6f40)),
           ),
         ),
       ),

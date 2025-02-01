@@ -33,17 +33,17 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          primaryColor: const Color(0xfff51957),
+          primaryColor: const Color(0xff2e6f40),
           textSelectionTheme: const TextSelectionThemeData(
-            cursorColor: Color(0xfff51957),
+            cursorColor: Color(0xff2e6f40),
           ),
           inputDecorationTheme: const InputDecorationTheme(
             labelStyle: TextStyle(
               color: Color(
-                  0xfff51957),
+                  0xff2e6f40),
             ),
             focusedBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: Color(0xfff51957)),
+              borderSide: BorderSide(color: Color(0xff2e6f40)),
             ),
           ),
         ),
@@ -62,7 +62,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                       style: GoogleFonts.montserrat(
                         fontSize: 24.0,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xfff51957),
+                        color: const Color(0xff2e6f40),
                       ),
                     ),
                   ),
@@ -110,7 +110,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xfff51957),
+                          backgroundColor: const Color(0xff2e6f40),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(15),
                           ),

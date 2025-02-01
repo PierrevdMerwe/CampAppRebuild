@@ -146,7 +146,7 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                 child: const Text(
                   'Ok',
                   style: TextStyle(
-                    color: Color(0xfff51957),
+                    color: Color(0xff2e6f40),
                     fontFamily: 'Montserrat',
                     fontSize: 20,
                   ),
@@ -190,7 +190,7 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                             style: GoogleFonts.montserrat(
                               fontSize: 24.0,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xfff51957),
+                              color: const Color(0xff2e6f40),
                             ),
                           ),
                         ],
@@ -352,7 +352,7 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xfff51957),
+                          backgroundColor: const Color(0xff2e6f40),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(15),
                           ),
@@ -426,7 +426,7 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                                       child: const Text(
                                         'OK',
                                         style: TextStyle(
-                                          color: Color(0xfff51957),
+                                          color: Color(0xff2e6f40),
                                           fontFamily: 'Montserrat',
                                           fontSize: 20,
                                         ),

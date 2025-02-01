@@ -61,7 +61,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                   child: const Text(
                     'Ok',
                     style: TextStyle(
-                      color: Color(0xfff51957),
+                      color: Color(0xff2e6f40),
                       fontFamily: 'Montserrat',
                       fontSize: 20,
                     ),
@@ -103,7 +103,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                         style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xfff51957))),
+                            color: Color(0xff2e6f40))),
                   ),
                 ),
                 Padding(
@@ -121,7 +121,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                   ),
                   value: themeModel.isDark,
                   activeColor: Colors.white,
-                  activeTrackColor: const Color(0xfff51957),
+                  activeTrackColor: const Color(0xff2e6f40),
                   onChanged: (value) {
                     setState(() {
                       themeModel.isDark = value;
@@ -140,7 +140,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                   ),
                   value: isOtherFeature,
                   activeColor: Colors.white,
-                  activeTrackColor: const Color(0xfff51957),
+                  activeTrackColor: const Color(0xff2e6f40),
                   onChanged: (value) {
                     setState(() {
                       isOtherFeature = value;
@@ -161,7 +161,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                         style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xfff51957))),
+                            color: Color(0xff2e6f40))),
                   ),
                 ),
                 Padding(
@@ -179,7 +179,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                   ),
                   value: isLocationPermission,
                   activeColor: Colors.white,
-                  activeTrackColor: const Color(0xfff51957),
+                  activeTrackColor: const Color(0xff2e6f40),
                   onChanged: (value) async {
                     if (value) {
                       PermissionStatus status =
@@ -206,7 +206,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                   ),
                   value: isStoragePermission,
                   activeColor: Colors.white,
-                  activeTrackColor: const Color(0xfff51957),
+                  activeTrackColor: const Color(0xff2e6f40),
                   onChanged: (value) async {
                     if (value) {
                       PermissionStatus status =
@@ -271,7 +271,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                                 child: const Text(
                                   'Cancel',
                                   style: TextStyle(
-                                    color: Color(0xfff51957),
+                                    color: Color(0xff2e6f40),
                                     fontFamily: 'Montserrat',
                                     fontSize: 20,
                                   ),
@@ -285,7 +285,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                                 child: const Text(
                                   'Proceed',
                                   style: TextStyle(
-                                    color: Color(0xfff51957),
+                                    color: Color(0xff2e6f40),
                                     fontFamily: 'Montserrat',
                                     fontSize: 20,
                                   ),
@@ -307,7 +307,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                     style: GoogleFonts.montserrat(
                       fontSize: 24.0,
                       fontWeight: FontWeight.bold,
-                      color: const Color(0xfff51957),
+                      color: const Color(0xff2e6f40),
                     ),
                   ),
                 ),

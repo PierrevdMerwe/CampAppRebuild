@@ -301,7 +301,7 @@ class _SearchScreenState extends State<SearchScreen> {
                             child: Text(
                               'R${NumberFormat("#,##0").format(int.parse(doc['price']))}',
                               style: GoogleFonts.montserrat(
-                                color: const Color(0xfff51957),
+                                color: const Color(0xff2e6f40),
                                 fontSize: 18.0,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -319,7 +319,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               );
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xfff51957),
+                              backgroundColor: const Color(0xff2e6f40),
                               // background color
                               shape: RoundedRectangleBorder(
                                 borderRadius:
@@ -379,7 +379,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   children: [
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xfff51957),
+                        backgroundColor: const Color(0xff2e6f40),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15),
                         ),
@@ -408,18 +408,18 @@ class _SearchScreenState extends State<SearchScreen> {
                                             size: 18.0,
                                             color: isSelected
                                                 ? Colors.pink.shade50
-                                                : const Color(0xfff51957)),
+                                                : const Color(0xff2e6f40)),
                                         label: Text(category,
                                             style: GoogleFonts.montserrat(
                                                 color: isSelected
                                                     ? Colors.pink.shade50
-                                                    : const Color(0xfff51957))),
+                                                    : const Color(0xff2e6f40))),
                                         style: ElevatedButton.styleFrom(
                                           foregroundColor: isSelected
                                               ? Colors.pink.shade50
-                                              : const Color(0xfff51957),
+                                              : const Color(0xff2e6f40),
                                           backgroundColor: isSelected
-                                              ? const Color(0xfff51957)
+                                              ? const Color(0xff2e6f40)
                                               : Colors.pink.shade50,
                                           shape: RoundedRectangleBorder(
                                             borderRadius:
@@ -553,7 +553,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                       child: TextButton(
                                         child: const Text('Clear Filters',
                                             style: TextStyle(
-                                                color: Color(0xfff51957))),
+                                                color: Color(0xff2e6f40))),
                                         onPressed: () {
                                           setState(() {
                                             minPrice = 0;
@@ -578,7 +578,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                     ElevatedButton(
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: const Color(
-                                            0xfff51957), // background color
+                                            0xff2e6f40), // background color
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(
                                               15), // border radius
@@ -651,10 +651,10 @@ class _SearchScreenState extends State<SearchScreen> {
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         foregroundColor:
-                            _showMap ? const Color(0xfff51957) : Colors.white,
+                            _showMap ? const Color(0xff2e6f40) : Colors.white,
                         backgroundColor: _showMap
                             ? Colors.pink.shade50
-                            : const Color(0xfff51957),
+                            : const Color(0xff2e6f40),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15),
                         ),
@@ -781,7 +781,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                                 const EdgeInsets.only(left: 4),
                                             leading: const Icon(
                                                 Icons.location_pin,
-                                                color: Color(0xfff51957)),
+                                                color: Color(0xff2e6f40)),
                                             title: Text(
                                               snapshot.data![index]
                                                   ['main_fall_under'],
@@ -792,7 +792,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                             contentPadding:
                                                 const EdgeInsets.only(left: 4),
                                             leading: const Icon(Icons.phone,
-                                                color: Color(0xfff51957)),
+                                                color: Color(0xff2e6f40)),
                                             title: Text(
                                               snapshot.data![index]
                                                   ['telephone'],
@@ -809,7 +809,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                                   const EdgeInsets.only(
                                                       left: 4),
                                               leading: const Icon(Icons.pets,
-                                                  color: Color(0xfff51957)),
+                                                  color: Color(0xff2e6f40)),
                                               title: Text(
                                                 snapshot.data![index]['tags']
                                                         .contains(
@@ -825,7 +825,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                                   EdgeInsets.only(left: 4),
                                               leading: Icon(
                                                   Icons.do_not_disturb_alt,
-                                                  color: Color(0xfff51957)),
+                                                  color: Color(0xff2e6f40)),
                                               title: Text('No Pets Allowed'),
                                             ),
                                           ListTile(
@@ -833,7 +833,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                                 const EdgeInsets.only(left: 4),
                                             leading: const Icon(
                                                 Icons.check_circle_outline,
-                                                color: Color(0xfff51957)),
+                                                color: Color(0xff2e6f40)),
                                             title: Text(
                                               snapshot.data![index]['tags']
                                                       .contains(
@@ -1016,7 +1016,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(5.0),
                     decoration: BoxDecoration(
-                      color: const Color(0xfff51957),
+                      color: const Color(0xff2e6f40),
                       borderRadius: BorderRadius.circular(20.0),
                     ),
                     child: Row(
@@ -1076,7 +1076,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                               style: GoogleFonts.montserrat(
                                                   fontWeight: FontWeight.bold,
                                                   color:
-                                                      const Color(0xfff51957))),
+                                                      const Color(0xff2e6f40))),
                                         ),
                                       ],
                                     ),
@@ -1092,7 +1092,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                 child: Text('Close',
                                     style: GoogleFonts.montserrat(
                                         fontWeight: FontWeight.bold,
-                                        color: const Color(0xfff51957))),
+                                        color: const Color(0xff2e6f40))),
                               ),
                             ],
                           );
@@ -1103,7 +1103,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(8.0),
                     decoration: const BoxDecoration(
-                      color: Color(0xfff51957),
+                      color: Color(0xff2e6f40),
                       shape: BoxShape.circle,
                     ),
                     child: Text(
@@ -1121,7 +1121,7 @@ class _SearchScreenState extends State<SearchScreen> {
             child: Text(
               'R${NumberFormat("#,##0").format(int.parse(price))}',
               style: GoogleFonts.montserrat(
-                color: const Color(0xfff51957),
+                color: const Color(0xff2e6f40),
                 fontSize: 18.0,
                 fontWeight: FontWeight.bold,
               ),

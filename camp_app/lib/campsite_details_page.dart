@@ -91,7 +91,7 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> {
                         bottom: 10,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xfff51957),
+                            backgroundColor: const Color(0xff2e6f40),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15),
                             ),
@@ -133,7 +133,7 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> {
                                       },
                                       child: Text('Close',
                                           style: GoogleFonts.montserrat(
-                                            color: const Color(0xfff51957),
+                                            color: const Color(0xff2e6f40),
                                             fontWeight: FontWeight.bold,
                                           )),
                                     ),
@@ -171,7 +171,7 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> {
                         style: GoogleFonts.montserrat(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xfff51957),
+                          color: const Color(0xff2e6f40),
                         ),
                       ),
                     ),
@@ -183,7 +183,7 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> {
                     children: [
                       const Padding(
                         padding: EdgeInsets.only(left: 8.0, right: 4.0),
-                        child: Icon(Icons.location_on, color: Color(0xfff51957), size: 20),
+                        child: Icon(Icons.location_on, color: Color(0xff2e6f40), size: 20),
                       ),
                       Expanded(
                         child: GestureDetector(
@@ -209,7 +209,7 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> {
                               fontWeight: FontWeight.bold,
                               color: Colors.black, // Changed to black
                               decoration: TextDecoration.underline,
-                              decorationColor: const Color(0xfff51957),
+                              decorationColor: const Color(0xff2e6f40),
                             ),
                           ),
                         ),
@@ -245,14 +245,14 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> {
                     child: const Divider(thickness: 1),
                   ),
                   ListTile(
-                    leading: const Icon(Icons.attach_money, color: Color(0xfff51957)),
+                    leading: const Icon(Icons.attach_money, color: Color(0xff2e6f40)),
                     title: Text(
                       'Rates From: R${widget.campsite['price']}',
                       style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
                     ),
                   ),
                   ListTile(
-                    leading: const Icon(Icons.local_fire_department, color: Color(0xfff51957)),
+                    leading: const Icon(Icons.local_fire_department, color: Color(0xff2e6f40)),
                     title: Text(
                       'Campsite Rates Per: TODO: pay per what on firebase?',
                       style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
@@ -310,7 +310,7 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> {
               child: Container(
                 padding: const EdgeInsets.all(5.0),
                 decoration: BoxDecoration(
-                  color: const Color(0xfff51957),
+                  color: const Color(0xff2e6f40),
                   borderRadius: BorderRadius.circular(20.0),
                 ),
                 child: Row(
@@ -350,7 +350,7 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> {
                                     const SizedBox(width: 5), // Adjust the space as needed
                                     Text(tag, style: GoogleFonts.montserrat(
                                         fontWeight: FontWeight.bold,
-                                        color: const Color(0xfff51957)
+                                        color: const Color(0xff2e6f40)
                                     )),
                                   ],
                                 ),
@@ -365,7 +365,7 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> {
                             },
                             child: Text('Close', style: GoogleFonts.montserrat(
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xfff51957)
+                                color: const Color(0xff2e6f40)
                             )),
                           ),
                         ],
@@ -377,7 +377,7 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> {
               child: Container(
                 padding: const EdgeInsets.all(8.0),
                 decoration: const BoxDecoration(
-                  color: Color(0xfff51957),
+                  color: Color(0xff2e6f40),
                   shape: BoxShape.circle,
                 ),
                 child: Text(
