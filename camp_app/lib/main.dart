@@ -1,14 +1,14 @@
+import 'package:camp_app/src/auth/screens/welcome_screen.dart';
+import 'package:camp_app/src/core/config/theme/theme_model.dart';
+import 'package:camp_app/src/home/screens/home_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'welcome.dart';
-import 'theme_model.dart';
-import 'home.dart';
 
 Future<void> resetFirstLaunch() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  await prefs.setBool('isFirstLaunch', false); // true = each launch is like first time, false = after setup process / not first time.
+  await prefs.setBool('isFirstLaunch', true); // true = each launch is like first time, false = after setup process / not first time.
 }
 
 Future main() async {
@@ -58,7 +58,7 @@ class MyApp extends StatelessWidget {
             if (snapshot.data == true) {
               return const WelcomeScreen();
             } else {
-              return const LandingPage();
+              return const HomeScreen();
             }
           } else {
             return const Scaffold(

@@ -1,4 +1,3 @@
-import 'package:camp_app/search_result.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
+
+import 'campsite_search_screen.dart';
 
 class CampsiteDetailsPage extends StatefulWidget {
   final DocumentSnapshot campsite;

@@ -7,8 +7,9 @@ import 'package:shimmer/shimmer.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'campsite_details_page.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+import 'campsite_details_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   String query;

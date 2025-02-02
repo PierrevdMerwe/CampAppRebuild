@@ -1,11 +1,11 @@
+import 'package:camp_app/src/core/config/theme/theme_model.dart';
+import 'package:camp_app/src/home/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'theme_model.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'home.dart';
 
 class PreferencesScreen extends StatefulWidget {
   const PreferencesScreen({super.key});
@@ -26,7 +26,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
 
     // Navigate to LandingPage
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const LandingPage()),
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
       (Route<dynamic> route) => false,
     );
   }
