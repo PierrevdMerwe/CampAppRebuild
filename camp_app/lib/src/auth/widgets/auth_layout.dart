@@ -25,7 +25,6 @@ class AuthLayout extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                const SizedBox(height: 60),
                 SizedBox(
                   height: 200,
                   width: 200,

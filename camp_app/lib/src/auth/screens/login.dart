@@ -1,7 +1,9 @@
 // lib/src/auth/screens/login_screen.dart
+import 'package:camp_app/src/auth/screens/pending_verification.dart';
 import 'package:camp_app/src/auth/screens/register.dart';
 import 'package:flutter/material.dart';
 import '../../../preferences.dart';
+import '../../utils/auth_utils.dart';
 import '../services/auth_service.dart';
 import '../widgets/auth_layout.dart';
 import '../widgets/auth_button.dart';
@@ -40,56 +42,86 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final userCredential = await _authService.signInWithEmail(
+      final result = await _authService.signInWithEmail(
         _emailController.text,
         _passwordController.text,
       );
 
-      if (userCredential != null && mounted) {
-        _showSuccessAndNavigate();
+      if (mounted) {
+        if (_userType == 'Campsite Owner' && !result['is_site_owner']) {
+          AuthUtils.showErrorSnackbar(context, 'This account is not registered as a campsite owner');
+          return;
+        }
+
+        if (_userType == 'Camper' && result['is_site_owner']) {
+          AuthUtils.showErrorSnackbar(context, 'This account is not registered as a camper');
+          return;
+        }
+
+        if (result['is_site_owner']) {
+          final verificationStatus = result['verification_status'];
+          if (verificationStatus != null && !verificationStatus['verified']) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PendingVerificationScreen(
+                  status: verificationStatus['status'],
+                ),
+              ),
+            );
+            return;
+          }
+        }
+
+        AuthUtils.showSuccessSnackbar(context, 'Successfully logged in!');
+
+        Future.delayed(const Duration(seconds: 2), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const PreferencesScreen()),
+          );
+        });
       }
     } catch (e) {
-      _showError(e.toString());
+      if (mounted) {
+        AuthUtils.showErrorSnackbar(context, e.toString());
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _handleGoogleSignIn() async {
+    if (_userType == 'Campsite Owner') {
+      AuthUtils.showErrorSnackbar(
+          context,
+          'Campsite owners must register with email and password'
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
-      final userCredential = await _authService.signInWithGoogle();
-      if (userCredential != null && mounted) {
-        _showSuccessAndNavigate();
+      final result = await _authService.signInWithGoogle();
+
+      if (mounted) {
+        AuthUtils.showSuccessSnackbar(context, 'Successfully logged in!');
+
+        Future.delayed(const Duration(seconds: 2), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const PreferencesScreen()),
+          );
+        });
       }
     } catch (e) {
-      _showError(e.toString());
+      if (mounted) {
+        AuthUtils.showErrorSnackbar(context, e.toString());
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  void _showSuccessAndNavigate() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Successfully logged in!')),
-    );
-
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const PreferencesScreen()),
-      );
-    });
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
-    );
   }
 
   @override
@@ -149,14 +181,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: _handleLogin,
                   isLoading: _isLoading,
                 ),
+                if (_userType != 'Campsite Owner') ...[
+                  const SizedBox(height: 20),
+                  SocialLoginButtons(
+                    onGooglePressed: _handleGoogleSignIn,
+                    onApplePressed: () {
+                      // TODO: Implement Apple sign in
+                    },
+                  ),
+                ],
                 const SizedBox(height: 20),
-                SocialLoginButtons(
-                  onGooglePressed: _handleGoogleSignIn,
-                  onApplePressed: () {
-                    // TODO: Implement Apple sign in
-                  },
-                ),
-                const SizedBox(height: 40),
                 const Divider(),
                 const SizedBox(height: 20),
                 _buildRegisterLink(),

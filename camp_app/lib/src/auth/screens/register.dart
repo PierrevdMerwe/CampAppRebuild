@@ -1,7 +1,10 @@
 // lib/src/auth/screens/register_screen.dart
+import 'package:camp_app/src/auth/screens/pending_verification.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../preferences.dart';
+import '../../utils/auth_utils.dart';
 import '../services/auth_service.dart';
 import '../services/site_owner_service.dart';
 import '../widgets/auth_layout.dart';
@@ -23,10 +26,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _businessNameController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _campsiteNameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _authService = AuthService();
   final _siteOwnerService = SiteOwnerService();
+  bool _isCampsiteNameTaken = false;
 
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -43,7 +49,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _businessNameController.dispose();
+    _nameController.dispose();
+    _campsiteNameController.dispose();
     _phoneController.dispose();
     super.dispose();
   }
@@ -73,52 +80,65 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final userCredential = await _authService.registerWithEmail(
-        _emailController.text,
-        _passwordController.text,
-      );
-
-      if (userCredential != null) {
-        if (_userType == 'Campsite Owner') {
-          await _siteOwnerService.createSiteOwner(
-            userCredential.user!.uid,
-            _businessNameController.text,
-            {
-              'email': _emailController.text,
-              'phone': _phoneController.text,
-            },
-          );
+      if (_userType == 'Campsite Owner') {
+        // Check campsite name uniqueness first
+        if (!await _siteOwnerService.isCampsiteNameUnique(_campsiteNameController.text)) {
+          setState(() => _isLoading = false);
+          if (mounted) {
+            AuthUtils.showErrorSnackbar(context, 'This campsite is already registered');
+          }
+          return;
         }
+      }
 
-        if (mounted) _showSuccessAndNavigate();
+      if (_userType == 'Camper') {
+        await _authService.registerWithEmail(
+          email: _emailController.text,
+          password: _passwordController.text,
+          name: _nameController.text,
+          displayName: _nameController.text,
+          username: _usernameController.text,
+          isCampOwner: false,
+        );
+      } else {
+        await _authService.registerWithEmail(
+          email: _emailController.text,
+          password: _passwordController.text,
+          name: _campsiteNameController.text,
+          isCampOwner: true,
+          phone: _phoneController.text,
+          campsiteName: _campsiteNameController.text,
+        );
+      }
+
+      if (mounted) {
+        if (_userType == 'Campsite Owner') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const PendingVerificationScreen(
+                status: 'pending',
+              ),
+            ),
+          );
+        } else {
+          AuthUtils.showSuccessSnackbar(context, 'Successfully registered!');
+
+          Future.delayed(const Duration(seconds: 2), () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const PreferencesScreen()),
+            );
+          });
+        }
       }
     } catch (e) {
-      _showError(e.toString());
+      if (mounted) {
+        AuthUtils.showErrorSnackbar(context, e.toString());
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  void _showSuccessAndNavigate() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Successfully registered!')),
-    );
-
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const PreferencesScreen()),
-      );
-    });
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
-    );
   }
 
   @override
@@ -147,6 +167,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 20),
+                if (_userType == 'Camper') ...[
+                  CustomTextField(
+                    controller: _nameController,
+                    labelText: 'Full Name',
+                    prefixIcon: Icons.person,
+                    validator: (value) =>
+                    value?.isEmpty ?? true ? 'Name is required' : null,
+                  ),
+                  const SizedBox(height: 20),
+                  CustomTextField(
+                    controller: _usernameController,
+                    labelText: 'Username',
+                    prefixIcon: Icons.alternate_email,
+                    validator: (value) {
+                      if (value?.isEmpty ?? true) {
+                        return 'Username is required';
+                      }
+                      if (value!.contains(' ')) {
+                        return 'Username cannot contain spaces';
+                      }
+                      if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
+                        return 'Username can only contain letters, numbers, and underscores';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                ],
                 CustomTextField(
                   controller: _passwordController,
                   labelText: 'Password',
@@ -160,12 +208,71 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 _buildPasswordRequirements(),
                 if (_userType == 'Campsite Owner') ...[
                   const SizedBox(height: 20),
-                  CustomTextField(
-                    controller: _businessNameController,
-                    labelText: 'Business Name',
-                    prefixIcon: Icons.business,
-                    validator: (value) =>
-                    value?.isEmpty ?? true ? 'Business name is required' : null,
+                  StatefulBuilder(
+                    builder: (BuildContext context, StateSetter setState) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomTextField(
+                            controller: _campsiteNameController,
+                            labelText: 'Campsite Name',
+                            prefixIcon: Icons.bungalow,
+                            validator: (value) {
+                              if (value?.isEmpty ?? true) {
+                                return 'Campsite name is required';
+                              }
+                              if (_isCampsiteNameTaken) {
+                                return 'This campsite is already registered';
+                              }
+                              return null;
+                            },
+                            onChanged: (value) async {
+                              if (value.isNotEmpty) {
+                                final isUnique = await _siteOwnerService.isCampsiteNameUnique(value);
+                                setState(() {
+                                  _isCampsiteNameTaken = !isUnique;
+                                });
+                              }
+                            },
+                          ),
+                          if (_isCampsiteNameTaken) ...[
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    'This campsite is already registered - ',
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.error,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  InkWell(
+                                    onTap: () {
+                                      final Uri emailLaunchUri = Uri(
+                                        scheme: 'mailto',
+                                        path: 'support.thecampp@gmail.com',
+                                        query: 'subject=Campsite Registration Query',
+                                      );
+                                      launchUrl(emailLaunchUri);
+                                    },
+                                    child: Text(
+                                      'Contact our support team',
+                                      style: TextStyle(
+                                        color: Theme.of(context).colorScheme.error,
+                                        fontSize: 12,
+                                        decoration: TextDecoration.underline,
+                                        decorationColor: Theme.of(context).colorScheme.error,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      );
+                    },
                   ),
                   const SizedBox(height: 20),
                   CustomTextField(
@@ -183,11 +290,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onPressed: _handleRegister,
                   isLoading: _isLoading,
                 ),
-                const SizedBox(height: 20),
-                SocialLoginButtons(
-                  onGooglePressed: () {/* TODO */},
-                  onApplePressed: () {/* TODO */},
-                ),
+                if (_userType != 'Campsite Owner') ...[
+                  const SizedBox(height: 20),
+                  SocialLoginButtons(
+                    onGooglePressed: () {/* TODO */},
+                    onApplePressed: () {/* TODO */},
+                  ),
+                ],
                 const SizedBox(height: 40),
                 const Divider(),
                 const SizedBox(height: 20),

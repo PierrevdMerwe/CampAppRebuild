@@ -1,21 +1,81 @@
+// lib/src/auth/services/site_owner_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:developer' as developer;
+
+import '../../utils/auth_utils.dart';
 
 class SiteOwnerService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<void> createSiteOwner(String userId, String businessName, Map<String, dynamic> contactDetails) async {
-    await _firestore.collection('site_owners').doc(userId).set({
-      'verified': false,  // Initially set to false pending approval
-      'businessName': businessName,
-      'contactDetails': contactDetails,
-      'ownedSites': [],  // Empty array initially
-      'createdAt': FieldValue.serverTimestamp(),
-      'status': 'pending', // For approval workflow
-    });
+  void _logDebug(String message, {bool isError = false}) {
+    final emoji = isError ? '❌' : '✅';
+    developer.log('$emoji $message', name: 'SiteOwnerService');
   }
 
-  Future<bool> isSiteOwner(String userId) async {
-    final doc = await _firestore.collection('site_owners').doc(userId).get();
-    return doc.exists;
+  Future<void> createSiteOwner(String uid, String campsiteName, String email, String phone) async {
+    try {
+      _logDebug('📝 Creating new site owner in site_owners collection');
+
+      // Format the campsite name for document ID
+      final formattedName = AuthUtils.formatNameForFirestore(campsiteName);
+
+      await _firestore.collection('site_owners').doc(formattedName).set({
+        'firebase_uid': uid,
+        'email': email,
+        'phone': phone,
+        'campsite_name': campsiteName,  // Original name with proper capitalization
+        'verified': false,
+        'status': 'pending',
+        'created_at': FieldValue.serverTimestamp(),
+        'owned_sites': [],
+      });
+
+      _logDebug('✅ Successfully created site owner profile');
+    } catch (e) {
+      _logDebug('Failed to create site owner profile: $e', isError: true);
+      throw 'Failed to create site owner profile: ${e.toString()}';
+    }
+  }
+
+  Future<bool> isSiteOwner(String uid) async {
+    try {
+      final querySnapshot = await _firestore
+          .collection('site_owners')
+          .where('firebase_uid', isEqualTo: uid)
+          .get();
+      return querySnapshot.docs.isNotEmpty;
+    } catch (e) {
+      _logDebug('Failed to check if user is site owner: $e', isError: true);
+      return false;
+    }
+  }
+
+  Future<bool> isCampsiteNameUnique(String campsiteName) async {
+    final formattedName = AuthUtils.formatNameForFirestore(campsiteName);
+    final doc = await _firestore.collection('site_owners').doc(formattedName).get();
+    return !doc.exists;
+  }
+
+  Future<Map<String, dynamic>?> getVerificationStatus(String uid) async {
+    try {
+      _logDebug('🔍 Checking verification status for site owner: $uid');
+      final doc = await _firestore.collection('site_owners').doc(uid).get();
+
+      if (!doc.exists) {
+        _logDebug('❌ No site owner found with ID: $uid', isError: true);
+        return null;
+      }
+
+      final status = {
+        'verified': doc.data()?['verified'] ?? false,
+        'status': doc.data()?['status'] ?? 'pending'
+      };
+
+      _logDebug('✅ Verification status retrieved: ${status['status']}');
+      return status;
+    } catch (e) {
+      _logDebug('Failed to get verification status: $e', isError: true);
+      return null;
+    }
   }
 }
