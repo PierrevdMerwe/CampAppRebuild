@@ -14,21 +14,42 @@ class PreferencesScreen extends StatefulWidget {
   _PreferencesScreenState createState() => _PreferencesScreenState();
 }
 
+// In the _PreferencesScreenState class, remove the isOtherFeature variable
 class _PreferencesScreenState extends State<PreferencesScreen> {
-  bool isOtherFeature = false;
   bool isLocationPermission = false;
   bool isStoragePermission = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Check current permission status when screen loads
+    _checkCurrentPermissions();
+  }
 
   Future<void> completePreferences() async {
     // Unset the flag
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('justSignedIn', false);
 
-    // Navigate to LandingPage
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
-      (Route<dynamic> route) => false,
-    );
+    // Navigate to HomeScreen
+    if (mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+            (Route<dynamic> route) => false,
+      );
+    }
+  }
+
+  Future<void> _checkCurrentPermissions() async {
+    // Check location permission
+    var locationStatus = await Permission.location.status;
+    // Check storage permission
+    var storageStatus = await Permission.storage.status;
+
+    setState(() {
+      isLocationPermission = locationStatus.isGranted;
+      isStoragePermission = storageStatus.isGranted;
+    });
   }
 
   @override
@@ -72,13 +93,11 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
           },
         ),
         child: Scaffold(
-          backgroundColor: themeModel.isDark ? Colors.black : Colors.white,
+          backgroundColor: Colors.white, // Pure white background
           body: SafeArea(
             child: Column(
               children: <Widget>[
-                const SizedBox(
-                  height: 20,
-                ),
+                const SizedBox(height: 20),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0.0),
                   child: Text(
@@ -86,14 +105,13 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                     style: GoogleFonts.montserrat(
                       fontSize: 24.0,
                       fontWeight: FontWeight.bold,
-                      color: themeModel.isDark ? Colors.white : Colors.black,
+                      color: Colors.black,
                     ),
                   ),
                 ),
-                Lottie.asset('assets/gears.json', width: 70, height: 70),
-                const SizedBox(
-                  height: 60,
-                ),
+                // Make Lottie animation bigger
+                Lottie.asset('assets/gears.json', width: 150, height: 150),
+                const SizedBox(height: 60),
                 Padding(
                   padding: EdgeInsets.only(
                       left: MediaQuery.of(context).size.width * 0.03),
@@ -111,47 +129,45 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                       horizontal: MediaQuery.of(context).size.width * 0.03),
                   child: const Divider(color: Colors.black),
                 ),
-                SwitchListTile(
-                  title: Text(
-                    'Dark mode',
-                    style: GoogleFonts.montserrat(
-                      fontWeight: FontWeight.bold,
-                      color: themeModel.isDark ? Colors.white : Colors.black,
-                    ),
+                // Dark mode with coming soon
+                ListTile(
+                  title: Row(
+                    children: [
+                      Text(
+                        'Dark mode',
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xff2e6f40).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Coming soon',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 12,
+                            color: const Color(0xff2e6f40),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  value: themeModel.isDark,
-                  activeColor: Colors.white,
-                  activeTrackColor: const Color(0xff2e6f40),
-                  onChanged: (value) {
-                    setState(() {
-                      themeModel.isDark = value;
-                    });
-                  },
-                  inactiveTrackColor: Colors.grey,
-                  inactiveThumbColor: Colors.white,
-                ),
-                SwitchListTile(
-                  title: Text(
-                    'Some other feature Pierre forgot about',
-                    style: GoogleFonts.montserrat(
-                      fontWeight: FontWeight.bold,
-                      color: themeModel.isDark ? Colors.white : Colors.black,
-                    ),
+                  trailing: Switch(
+                    value: false,
+                    onChanged: null, // Disabled
+                    activeColor: Colors.white,
+                    activeTrackColor: const Color(0xff2e6f40),
+                    inactiveTrackColor: Colors.grey.withOpacity(0.5),
+                    inactiveThumbColor: Colors.white,
                   ),
-                  value: isOtherFeature,
-                  activeColor: Colors.white,
-                  activeTrackColor: const Color(0xff2e6f40),
-                  onChanged: (value) {
-                    setState(() {
-                      isOtherFeature = value;
-                    });
-                  },
-                  inactiveTrackColor: Colors.grey,
-                  inactiveThumbColor: Colors.white,
                 ),
-                const SizedBox(
-                  height: 60,
-                ),
+                const SizedBox(height: 60),
                 Padding(
                   padding: EdgeInsets.only(
                       left: MediaQuery.of(context).size.width * 0.03),
@@ -174,7 +190,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                     'Location permission',
                     style: GoogleFonts.montserrat(
                       fontWeight: FontWeight.bold,
-                      color: themeModel.isDark ? Colors.white : Colors.black,
+                      color: Colors.black,
                     ),
                   ),
                   value: isLocationPermission,
@@ -182,15 +198,13 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                   activeTrackColor: const Color(0xff2e6f40),
                   onChanged: (value) async {
                     if (value) {
-                      PermissionStatus status =
-                          await Permission.location.request();
+                      PermissionStatus status = await Permission.location.request();
                       setState(() {
                         isLocationPermission = status.isGranted;
                       });
                     } else {
-                      setState(() {
-                        isLocationPermission = false;
-                      });
+                      // Open app settings if user wants to revoke permission
+                      openAppSettings();
                     }
                   },
                   inactiveTrackColor: Colors.grey,
@@ -201,7 +215,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                     'Storage permission',
                     style: GoogleFonts.montserrat(
                       fontWeight: FontWeight.bold,
-                      color: themeModel.isDark ? Colors.white : Colors.black,
+                      color: Colors.black,
                     ),
                   ),
                   value: isStoragePermission,
@@ -209,27 +223,22 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                   activeTrackColor: const Color(0xff2e6f40),
                   onChanged: (value) async {
                     if (value) {
-                      PermissionStatus status =
-                          await Permission.storage.request();
+                      PermissionStatus status = await Permission.storage.request();
                       setState(() {
                         isStoragePermission = status.isGranted;
                       });
                     } else {
-                      setState(() {
-                        isStoragePermission = false;
-                      });
+                      // Open app settings if user wants to revoke permission
+                      openAppSettings();
                     }
                   },
                   inactiveTrackColor: Colors.grey,
                   inactiveThumbColor: Colors.white,
                 ),
-                const SizedBox(height: 130.0), // Adjust as needed
+                const Spacer(),
                 GestureDetector(
                   onTap: () {
-                    if (themeModel.isDark ||
-                        isOtherFeature ||
-                        isLocationPermission ||
-                        isStoragePermission) {
+                    if (isLocationPermission || isStoragePermission) {
                       completePreferences();
                     } else {
                       showDialog<void>(
@@ -254,14 +263,14 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                                 children: <TextSpan>[
                                   TextSpan(
                                       text:
-                                          'We respect your decision to not allow us permission. Please note that this can be changed later on in '),
+                                      'We respect your decision to not allow us permission. Please note that this can be changed later on in '),
                                   TextSpan(
                                       text: 'Settings',
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold)),
                                   TextSpan(
                                       text:
-                                          ' as this can make the app\'s experience better.'),
+                                      ' as this can make the app\'s experience better.'),
                                 ],
                               ),
                             ),
@@ -298,12 +307,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                     }
                   },
                   child: Text(
-                    themeModel.isDark ||
-                            isOtherFeature ||
-                            isLocationPermission ||
-                            isStoragePermission
-                        ? 'Continue'
-                        : 'Skip',
+                    isLocationPermission || isStoragePermission ? 'Continue' : 'Skip',
                     style: GoogleFonts.montserrat(
                       fontSize: 24.0,
                       fontWeight: FontWeight.bold,
@@ -311,6 +315,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 20),
               ],
             ),
           ),

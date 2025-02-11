@@ -59,16 +59,22 @@ class SiteOwnerService {
   Future<Map<String, dynamic>?> getVerificationStatus(String uid) async {
     try {
       _logDebug('🔍 Checking verification status for site owner: $uid');
-      final doc = await _firestore.collection('site_owners').doc(uid).get();
 
-      if (!doc.exists) {
-        _logDebug('❌ No site owner found with ID: $uid', isError: true);
+      // Query by firebase_uid field instead of document ID
+      final querySnapshot = await _firestore
+          .collection('site_owners')
+          .where('firebase_uid', isEqualTo: uid)
+          .get();
+
+      if (querySnapshot.docs.isEmpty) {
+        _logDebug('❌ No site owner found with firebase_uid: $uid', isError: true);
         return null;
       }
 
+      final doc = querySnapshot.docs.first;
       final status = {
-        'verified': doc.data()?['verified'] ?? false,
-        'status': doc.data()?['status'] ?? 'pending'
+        'verified': doc.data()['verified'] ?? false,
+        'status': doc.data()['status'] ?? 'pending'
       };
 
       _logDebug('✅ Verification status retrieved: ${status['status']}');

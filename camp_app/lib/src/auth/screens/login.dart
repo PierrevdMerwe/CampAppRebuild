@@ -91,6 +91,38 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // In login.dart
+  Future<void> _handleAppleSignIn() async {
+    if (_userType == 'Campsite Owner') {
+      AuthUtils.showErrorSnackbar(
+          context, 'Campsite owners must register with email and password');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final result = await _authService.signInWithApple(userType: _userType);
+
+      if (mounted) {
+        AuthUtils.showSuccessSnackbar(context, 'Successfully logged in!');
+
+        Future.delayed(const Duration(seconds: 2), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const PreferencesScreen()),
+          );
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        AuthUtils.showErrorSnackbar(context, e.toString());
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _handleGoogleSignIn() async {
     if (_userType == 'Campsite Owner') {
       AuthUtils.showErrorSnackbar(
@@ -185,9 +217,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 20),
                   SocialLoginButtons(
                     onGooglePressed: _handleGoogleSignIn,
-                    onApplePressed: () {
-                      // TODO: Implement Apple sign in
-                    },
+                    onApplePressed: _handleAppleSignIn,
                   ),
                 ],
                 const SizedBox(height: 20),

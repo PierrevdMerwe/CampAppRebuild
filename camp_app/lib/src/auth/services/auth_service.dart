@@ -2,6 +2,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:developer' as developer;
+import 'apple_auth_service.dart';
 import 'user_service.dart';
 import 'site_owner_service.dart';
 
@@ -10,6 +11,7 @@ class AuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final UserService _userService = UserService();
   final SiteOwnerService _siteOwnerService = SiteOwnerService();
+  final AppleAuthService _appleAuthService = AppleAuthService();
 
   void _logDebug(String message, {bool isError = false}) {
     final emoji = isError ? '❌' : '✅';
@@ -118,6 +120,29 @@ class AuthService {
       final errorMessage = _handleFirebaseAuthError(e);
       _logDebug('Sign in error: ${e.code} - $errorMessage', isError: true);
       throw errorMessage;
+    }
+  }
+
+  // In auth_service.dart
+  Future<Map<String, dynamic>> signInWithApple({required String userType}) async {
+    if (userType == 'Campsite Owner') {
+      throw 'Campsite owners must register with email and password';
+    }
+
+    try {
+      final userCredential = await _appleAuthService.signInWithApple();
+
+      if (userCredential?.user != null) {
+        return {
+          'user_credential': userCredential,
+          'is_site_owner': false,
+          'verification_status': null
+        };
+      }
+
+      throw 'Apple sign in failed';
+    } catch (e) {
+      throw e.toString();
     }
   }
 

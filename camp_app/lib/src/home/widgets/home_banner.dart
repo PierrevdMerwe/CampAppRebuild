@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+// Update the HomeBanner widget
 class HomeBanner extends StatelessWidget {
   final Color textColor;
 
@@ -10,8 +11,8 @@ class HomeBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return FlexibleSpaceBar(
       titlePadding: EdgeInsets.only(
-          left: MediaQuery.of(context).size.width * 0.03,
-          bottom: 16.0
+        left: MediaQuery.of(context).size.width * 0.05,
+        bottom: 16.0,
       ),
       title: Column(
         mainAxisAlignment: MainAxisAlignment.end,
