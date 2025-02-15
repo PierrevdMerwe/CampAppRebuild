@@ -2,6 +2,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
+import '../../core/services/image_cache_service.dart';
 import '../models/campsite_model.dart';
 
 class CampsiteService {
@@ -112,11 +113,19 @@ class CampsiteService {
       final imageItems = result.items.where((item) =>
       item.fullPath.toLowerCase().endsWith('.jpg') ||
           item.fullPath.toLowerCase().endsWith('.jpeg') ||
-          item.fullPath.toLowerCase().endsWith('.webp') ||
           item.fullPath.toLowerCase().endsWith('.png')).toList();
 
       List<String> imageUrls = [];
       for (var item in imageItems) {
+        // Check cache first
+        final cacheService = ImageCacheService();
+        final cachedUrl = await cacheService.getCachedImage(item.fullPath);
+        if (cachedUrl != null) {
+          imageUrls.add(cachedUrl.path);
+          continue;
+        }
+
+        // If not in cache, get from Firebase and cache it
         String url = await item.getDownloadURL();
         imageUrls.add(url);
       }
@@ -142,40 +151,16 @@ class CampsiteService {
   // In campsite_service.dart
   Future<List<CampsiteModel>> getPopularCampsites() async {
     try {
-      print('🔍 CampsiteService: Starting popular campsites query');
-      print('📁 Target collection: campsites');
 
       final QuerySnapshot querySnapshot = await _firestore
           .collection('sites')
           .limit(7)
           .get();
 
-      print('📊 Query parameters:');
-      print('- Collection: campsites');
-      print('- Ordering by: rating (descending)');
-      print('- Limit: 10');
-      print('📄 Documents returned: ${querySnapshot.docs.length}');
-
-      if (querySnapshot.docs.isEmpty) {
-        print('⚠️ No documents found in campsites collection');
-        // Check if collection exists
-        final CollectionReference campsitesRef = _firestore.collection('campsites');
-        final AggregateQuerySnapshot aggregateSnapshot = await campsitesRef.count().get();
-        print('📊 Total documents in collection: ${aggregateSnapshot.count}');
-      } else {
-        // Log first document structure
-        print('📄 Sample document structure:');
-        final sampleDoc = querySnapshot.docs.first;
-        print('- Document ID: ${sampleDoc.id}');
-        print('- Fields: ${sampleDoc.data().toString()}');
-      }
-
       return querySnapshot.docs
           .map((doc) => CampsiteModel.fromFirestore(doc))
           .toList();
     } catch (e) {
-      print('❌ CampsiteService Error: $e');
-      print('🔍 Stack trace: ${StackTrace.current}');
       rethrow;
     }
   }

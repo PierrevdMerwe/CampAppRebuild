@@ -9,6 +9,7 @@ class UserModel {
   final String userType;
   final DateTime createdAt;
   final List<String> bookings;
+  final String userNumber;
 
   UserModel({
     required this.uid,
@@ -18,7 +19,31 @@ class UserModel {
     required this.userType,
     required this.createdAt,
     this.bookings = const [],
+    required this.userNumber,
   });
+
+  // In user_model.dart, add this method:
+  UserModel copyWith({
+    String? uid,
+    String? email,
+    String? name,
+    String? username,
+    String? userType,
+    DateTime? createdAt,
+    List<String>? bookings,
+    String? userNumber,
+  }) {
+    return UserModel(
+      uid: uid ?? this.uid,
+      email: email ?? this.email,
+      name: name ?? this.name,
+      username: username ?? this.username,
+      userType: userType ?? this.userType,
+      createdAt: createdAt ?? this.createdAt,
+      bookings: bookings ?? this.bookings,
+      userNumber: userNumber ?? this.userNumber,
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -29,6 +54,7 @@ class UserModel {
       'userType': userType,
       'createdAt': createdAt.toIso8601String(),
       'bookings': bookings,
+      'userNumber': userNumber,
     };
   }
 
@@ -41,6 +67,7 @@ class UserModel {
       userType: map['userType'] ?? 'camper',
       createdAt: DateTime.parse(map['createdAt']),
       bookings: List<String>.from(map['bookings'] ?? []),
+      userNumber: map['user_number'] ?? '',
     );
   }
 

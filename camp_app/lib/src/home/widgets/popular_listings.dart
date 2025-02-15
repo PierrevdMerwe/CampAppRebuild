@@ -7,6 +7,7 @@ import '../../core/config/theme/theme_model.dart';
 import '../../campsite/services/campsite_service.dart';
 import '../../campsite/screens/campsite_details_screen.dart';
 import '../../campsite/models/campsite_model.dart';
+import '../../shared/widgets/cached_firebase_image.dart';
 
 class PopularListings extends StatefulWidget {
   const PopularListings({super.key});
@@ -244,18 +245,22 @@ class _PopularListingItemState extends State<PopularListingItem>
           color: Colors.white,
         ),
       )
-          : Image.network(
-        imageUrl!,
+          : CachedFirebaseImage(
+        firebaseUrl: imageUrl!,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Center(
-            child: Text(
-              'Error loading image',
-              style: GoogleFonts.montserrat(),
-            ),
-          );
-        },
-      ),
+        placeholder: Shimmer.fromColors(
+          baseColor: Colors.grey[300]!,
+          highlightColor: Colors.grey[100]!,
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.white,
+          ),
+        ),
+        errorWidget: Center(
+          child: Text('Error loading image', style: GoogleFonts.montserrat()),
+        ),
+      )
     );
   }
 

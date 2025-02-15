@@ -11,7 +11,8 @@ class CustomTextField extends StatelessWidget {
   final VoidCallback? onToggleVisibility;
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
-  final void Function(String)? onChanged; // Add this line
+  final void Function(String)? onChanged;
+  final bool enabled; // Add this line
 
   const CustomTextField({
     super.key,
@@ -22,7 +23,8 @@ class CustomTextField extends StatelessWidget {
     this.onToggleVisibility,
     this.keyboardType,
     this.validator,
-    this.onChanged, // Add this line
+    this.onChanged,
+    this.enabled = true, // Add this line with a default value
   });
 
   @override
@@ -32,30 +34,49 @@ class CustomTextField extends StatelessWidget {
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
-      onChanged: onChanged, // Add this line
+      onChanged: onChanged,
+      enabled: enabled, // Add this line
       decoration: InputDecoration(
         labelText: labelText,
-        labelStyle: GoogleFonts.montserrat(color: AppColors.primary),
-        prefixIcon: Icon(prefixIcon, color: AppColors.primary),
+        labelStyle: GoogleFonts.montserrat(
+          color: enabled ? AppColors.primary : Colors.grey, // Update this line
+        ),
+        prefixIcon: Icon(
+          prefixIcon,
+          color: enabled ? AppColors.primary : Colors.grey, // Update this line
+        ),
         suffixIcon: onToggleVisibility != null
             ? IconButton(
           icon: Icon(
             obscureText ? Icons.visibility_off : Icons.visibility,
-            color: AppColors.primary,
+            color: enabled ? AppColors.primary : Colors.grey, // Update this line
           ),
           onPressed: onToggleVisibility,
         )
             : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(color: AppColors.primary),
+          borderSide: BorderSide(
+            color: enabled ? AppColors.primary : Colors.grey, // Update this line
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+          borderSide: BorderSide(
+            color: enabled ? AppColors.primary : Colors.grey, // Update this line
+            width: 2,
+          ),
         ),
+        disabledBorder: OutlineInputBorder( // Add this
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: Colors.grey),
+        ),
+        filled: !enabled, // Add this
+        fillColor: enabled ? Colors.transparent : Colors.grey.withOpacity(0.1), // Add this
       ),
-      style: GoogleFonts.montserrat(),
+      style: GoogleFonts.montserrat(
+        color: enabled ? Colors.black : Colors.grey, // Update this line
+      ),
     );
   }
 }

@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../shared/widgets/cached_firebase_image.dart';
 import 'campsite_details_screen.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -274,27 +275,21 @@ class _SearchScreenState extends State<SearchScreen> {
                               ),
                             )
                           else if (snapshot.data != null)
-                            Image.network(
-                              snapshot.data!,
+                            CachedFirebaseImage(
+                              firebaseUrl: snapshot.data!,
+                              // Fixed variable name
+                              height: 200.0,
+                              width: double.infinity,
                               fit: BoxFit.cover,
-                              loadingBuilder: (BuildContext context,
-                                  Widget child,
-                                  ImageChunkEvent? loadingProgress) {
-                                if (loadingProgress == null) {
-                                  completer.complete();
-                                  return child;
-                                }
-                                return Center(
-                                  child: CircularProgressIndicator(
-                                    value: loadingProgress.expectedTotalBytes !=
-                                            null
-                                        ? loadingProgress
-                                                .cumulativeBytesLoaded /
-                                            loadingProgress.expectedTotalBytes!
-                                        : null,
-                                  ),
-                                );
-                              },
+                              placeholder: Shimmer.fromColors(
+                                baseColor: Colors.grey[300]!,
+                                highlightColor: Colors.grey[100]!,
+                                child: Container(
+                                  width: double.infinity,
+                                  height: 200.0,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
                           const SizedBox(height: 10),
                           Align(
@@ -760,11 +755,21 @@ class _SearchScreenState extends State<SearchScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           if (imageSnapshot.data != null)
-                                            Image.network(
-                                              imageSnapshot.data!,
+                                            CachedFirebaseImage(
+                                              firebaseUrl: imageSnapshot.data!,
                                               height: 200.0,
                                               width: double.infinity,
                                               fit: BoxFit.cover,
+                                              placeholder: Shimmer.fromColors(
+                                                baseColor: Colors.grey[300]!,
+                                                highlightColor:
+                                                    Colors.grey[100]!,
+                                                child: Container(
+                                                  width: double.infinity,
+                                                  height: 200.0,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
                                             ),
                                           Padding(
                                             padding: const EdgeInsets.only(

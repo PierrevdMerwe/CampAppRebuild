@@ -39,6 +39,7 @@ class SocialFooter extends StatelessWidget {
             _buildSocialIcon(FontAwesomeIcons.instagram, () {}),
             const SizedBox(width: 24),
             _buildSocialIcon(FontAwesomeIcons.tiktok, () {}),
+            const SizedBox(width: 24),
           ],
         ),
         const SizedBox(height: 30),

@@ -2,10 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-
 import '../../auth/providers/user_provider.dart';
 
-// In profile_header.dart
 class ProfileHeader extends StatelessWidget {
   const ProfileHeader({super.key});
 
@@ -22,25 +20,40 @@ class ProfileHeader extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Consumer<UserProvider>(
-            builder: (context, userProvider, _) => Column(
-              children: [
-                Text(
-                  userProvider.user?.name ?? 'Guest User',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+            builder: (context, userProvider, _) {
+              return Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        userProvider.user?.username ?? 'Guest User',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (userProvider.user?.userNumber != null)
+                        Text(
+                          ' ${userProvider.user?.userNumber}',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 16,
+                            color: Colors.grey,
+                          ),
+                        ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  userProvider.user?.email ?? 'guest@example.com',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 16,
-                    color: Colors.grey,
+                  const SizedBox(height: 8),
+                  Text(
+                    userProvider.user?.email ?? 'guest@example.com',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              );
+            },
           ),
         ],
       ),

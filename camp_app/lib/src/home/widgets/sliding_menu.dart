@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../auth/providers/user_provider.dart';
 import '../../core/config/theme/theme_model.dart';
 import '../../profile/screens/profile_screen.dart';
+import '../../settings/screens/settings_screen.dart';
 
 class SlidingMenu extends StatelessWidget {
   final VoidCallback onClose;
@@ -19,10 +20,7 @@ class SlidingMenu extends StatelessWidget {
     return Consumer<ThemeModel>(
       builder: (context, themeModel, child) {
         return Container(
-          width: MediaQuery
-              .of(context)
-              .size
-              .width * 0.6,
+          width: MediaQuery.of(context).size.width * 0.6,
           height: double.infinity,
           color: Colors.white,
           child: SafeArea(
@@ -55,14 +53,17 @@ class SlidingMenu extends StatelessWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Consumer<UserProvider>(
-                            builder: (context, userProvider, _) =>
-                                Text(
-                                  userProvider.user?.name ?? 'Hi Guest User',
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                            builder: (context, userProvider, _) {
+                              return Text(
+                                userProvider.user?.username != null
+                                    ? '@${userProvider.user?.username}'
+                                    : 'Hi Guest User',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
                                 ),
+                              );
+                            },
                           ),
                         ),
                         IconButton(
@@ -107,7 +108,11 @@ class SlidingMenu extends StatelessWidget {
                   icon: Icons.settings,
                   title: 'Settings',
                   onTap: () {
-                    // TODO: Add settings handling
+                    onClose(); // Close the menu first
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                    );
                   },
                 ),
                 const Spacer(),
@@ -142,8 +147,10 @@ class SlidingMenu extends StatelessWidget {
                           child: Text(
                             'Link here',
                             style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.w600,
-                                color: themeModel.isDark ? Colors.black : Colors.white,
+                              fontWeight: FontWeight.w600,
+                              color: themeModel.isDark
+                                  ? Colors.black
+                                  : Colors.white,
                             ),
                           ),
                         ),

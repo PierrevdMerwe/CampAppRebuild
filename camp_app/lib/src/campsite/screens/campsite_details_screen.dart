@@ -7,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
+import '../../shared/widgets/cached_firebase_image.dart';
 import 'campsite_search_screen.dart';
 
 class CampsiteDetailsPage extends StatefulWidget {
@@ -82,7 +83,11 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> {
                         items: snapshot.data!.map((imageUrl) {
                           return Builder(
                             builder: (BuildContext context) {
-                              return Image.network(imageUrl, fit: BoxFit.cover);
+                              return CachedFirebaseImage(
+                                firebaseUrl: imageUrl,
+                                fit: BoxFit.cover,
+                                placeholder: const CircularProgressIndicator(),
+                              );
                             },
                           );
                         }).toList(),
@@ -119,8 +124,11 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> {
                                             return Padding(
                                               padding: const EdgeInsets.symmetric(
                                                   horizontal: 4.0),
-                                              child: Image.network(imageUrl,
-                                                  fit: BoxFit.cover),
+                                              child: CachedFirebaseImage(
+                                                firebaseUrl: imageUrl,
+                                                fit: BoxFit.cover,
+                                                placeholder: const CircularProgressIndicator(),
+                                              )
                                             );
                                           },
                                         );
