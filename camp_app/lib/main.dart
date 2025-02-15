@@ -1,3 +1,4 @@
+import 'package:camp_app/src/auth/providers/user_provider.dart';
 import 'package:camp_app/src/auth/screens/welcome_screen.dart';
 import 'package:camp_app/src/core/config/theme/theme_model.dart';
 import 'package:camp_app/src/home/screens/home_screen.dart';
@@ -11,13 +12,17 @@ Future<void> resetFirstLaunch() async {
   await prefs.setBool('isFirstLaunch', true); // true = each launch is like first time, false = after setup process / not first time.
 }
 
-Future main() async {
+// In main.dart
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await resetFirstLaunch();
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => ThemeModel(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => ThemeModel()),
+        ChangeNotifierProvider(create: (context) => UserProvider()),
+      ],
       child: const MyApp(),
     ),
   );

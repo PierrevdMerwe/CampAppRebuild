@@ -46,11 +46,11 @@
     <key>UIApplicationSupportsIndirectInputEvents</key>
     <true/>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>This app needs access to location when open.</string>
-    <key>NSLocationAlwaysUsageDescription</key>
-    <string>This app needs access to location when in the background.</string>
+    <string>We need your location to help you discover nearby campsites and enhance your navigation experience.</string>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>This app needs access to the photo library.</string>
+    <string>Access to your photo gallery allows you to save and share campsite photos.</string>
+    <key>NSUserNotificationUsageDescription</key>
+    <string>We'll send you updates about your bookings and special offers from campsites.</string>
     <!-- Remove this comment and the duplicate CFBundleURLTypes -->
         <key>CFBundleURLTypes</key>
         <array>

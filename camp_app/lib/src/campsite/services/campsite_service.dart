@@ -139,18 +139,44 @@ class CampsiteService {
     }
   }
 
+  // In campsite_service.dart
   Future<List<CampsiteModel>> getPopularCampsites() async {
     try {
-      final querySnapshot = await _firestore.collection('sites')
-          .orderBy('views', descending: true)
-          .limit(10)
+      print('🔍 CampsiteService: Starting popular campsites query');
+      print('📁 Target collection: campsites');
+
+      final QuerySnapshot querySnapshot = await _firestore
+          .collection('sites')
+          .limit(7)
           .get();
+
+      print('📊 Query parameters:');
+      print('- Collection: campsites');
+      print('- Ordering by: rating (descending)');
+      print('- Limit: 10');
+      print('📄 Documents returned: ${querySnapshot.docs.length}');
+
+      if (querySnapshot.docs.isEmpty) {
+        print('⚠️ No documents found in campsites collection');
+        // Check if collection exists
+        final CollectionReference campsitesRef = _firestore.collection('campsites');
+        final AggregateQuerySnapshot aggregateSnapshot = await campsitesRef.count().get();
+        print('📊 Total documents in collection: ${aggregateSnapshot.count}');
+      } else {
+        // Log first document structure
+        print('📄 Sample document structure:');
+        final sampleDoc = querySnapshot.docs.first;
+        print('- Document ID: ${sampleDoc.id}');
+        print('- Fields: ${sampleDoc.data().toString()}');
+      }
 
       return querySnapshot.docs
           .map((doc) => CampsiteModel.fromFirestore(doc))
           .toList();
     } catch (e) {
-      throw Exception('Failed to fetch popular campsites: $e');
+      print('❌ CampsiteService Error: $e');
+      print('🔍 Stack trace: ${StackTrace.current}');
+      rethrow;
     }
   }
 }

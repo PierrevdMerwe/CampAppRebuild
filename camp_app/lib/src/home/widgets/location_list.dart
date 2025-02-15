@@ -1,4 +1,3 @@
-// lib/src/home/widgets/location_list.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../campsite/screens/campsite_search_screen.dart';
@@ -60,6 +59,7 @@ class LocationCard extends StatelessWidget {
             );
           },
           child: Card(
+            color: const Color(0xffF5F8F5), // Light green-white color
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(

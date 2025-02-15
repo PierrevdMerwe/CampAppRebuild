@@ -43,6 +43,7 @@ class CategoryGrid extends StatelessWidget {
             ),
           ),
           child: Card(
+            color: const Color(0xffF5F8F5), // Light green-white color
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
@@ -72,6 +73,7 @@ class CategoryGrid extends StatelessWidget {
       child: SizedBox(
         width: 150,
         child: Card(
+          color: const Color(0xffF5F8F5), // Light green-white color
           child: ElevatedButton(
             onPressed: () {
               // Add your onPressed function here

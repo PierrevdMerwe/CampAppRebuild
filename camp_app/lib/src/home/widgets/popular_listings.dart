@@ -1,13 +1,12 @@
-// lib/src/home/widgets/popular_listings.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../core/config/theme/theme_model.dart';
-import '../../campsite/models/campsite_model.dart';
 import '../../campsite/services/campsite_service.dart';
 import '../../campsite/screens/campsite_details_screen.dart';
+import '../../campsite/models/campsite_model.dart';
 
 class PopularListings extends StatefulWidget {
   const PopularListings({super.key});
@@ -35,10 +34,10 @@ class _PopularListingsState extends State<PopularListings> {
         _isLoading = false;
       });
     } catch (e) {
+      print('Error loading popular listings: $e');
       setState(() {
         _isLoading = false;
       });
-      // Handle error appropriately
     }
   }
 
@@ -130,7 +129,7 @@ class _PopularListingItemState extends State<PopularListingItem>
         });
       }
     } catch (e) {
-      // Handle error appropriately
+      print('Error loading image: $e');
     }
   }
 
@@ -149,44 +148,79 @@ class _PopularListingItemState extends State<PopularListingItem>
       child: SizedBox(
         width: 250,
         child: GestureDetector(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CampsiteDetailsPage(widget.campsite as DocumentSnapshot<Object?>),
-            ),
-          ),
+          onTap: () async {
+            try {
+              final doc = await _campsiteService.getCampsiteById(widget.campsite.id);
+              if (mounted) {
+                final docSnapshot = await FirebaseFirestore.instance
+                    .collection('sites')
+                    .doc(widget.campsite.id)
+                    .get();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CampsiteDetailsPage(docSnapshot),
+                  ),
+                );
+              }
+            } catch (e) {
+              print('Error navigating to details: $e');
+            }
+          },
           child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
+            color: themeModel.isDark ? Colors.black : const Color(0xffF5F8F5),
+            child: SizedBox(
+              height: 180,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  const SizedBox(height: 5),
-                  _buildImage(),
-                  const SizedBox(height: 10),
-                  Text(
-                    widget.campsite.name,
-                    style: GoogleFonts.montserrat(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: themeModel.isDark ? Colors.white : Colors.black,
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(12)),
+                      child: _buildImage(),
                     ),
                   ),
-                  Row(
-                    children: [
-                      const Icon(
-                          Icons.location_on,
-                          color: Color(0xff2e6f40)
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        widget.campsite.mainFallUnder,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 14,
-                          color: themeModel.isDark ? Colors.white : Colors.black,
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          widget.campsite.name,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.location_on,
+                              color: Color(0xff2e6f40),
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                widget.campsite.mainFallUnder,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 14,
+                                  color: Colors.black87,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -199,20 +233,15 @@ class _PopularListingItemState extends State<PopularListingItem>
 
   Widget _buildImage() {
     return Container(
-      width: 225,
-      height: 100,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15.0),
-      ),
+      width: double.infinity,
+      height: 120,
+      color: const Color(0xffF5F8F5),
       child: imageUrl == null
           ? Shimmer.fromColors(
-        baseColor: Colors.grey[300]!,
-        highlightColor: Colors.grey[100]!,
+        baseColor: const Color(0xffF5F8F5),
+        highlightColor: Colors.white,
         child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(15.0),
-          ),
+          color: Colors.white,
         ),
       )
           : Image.network(

@@ -17,7 +17,8 @@ class PreferencesScreen extends StatefulWidget {
 // In the _PreferencesScreenState class, remove the isOtherFeature variable
 class _PreferencesScreenState extends State<PreferencesScreen> {
   bool isLocationPermission = false;
-  bool isStoragePermission = false;
+  bool isPhotosPermission = false;
+  bool isNotificationsPermission = false;
 
   @override
   void initState() {
@@ -41,15 +42,100 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
   }
 
   Future<void> _checkCurrentPermissions() async {
-    // Check location permission
-    var locationStatus = await Permission.location.status;
-    // Check storage permission
-    var storageStatus = await Permission.storage.status;
+    if (mounted) {
+      final locationStatus = await Permission.locationWhenInUse.status;
+      final photosStatus = await Permission.photos.status;
+      final notificationStatus = await Permission.notification.status;
 
-    setState(() {
-      isLocationPermission = locationStatus.isGranted;
-      isStoragePermission = storageStatus.isGranted;
-    });
+      setState(() {
+        isLocationPermission = locationStatus.isGranted;
+        isPhotosPermission = photosStatus.isGranted;
+        isNotificationsPermission = notificationStatus.isGranted;
+      });
+    }
+  }
+
+  Future<void> _handleLocationPermission() async {
+    var status = await Permission.locationWhenInUse.status;
+
+    if (status.isDenied) {
+      status = await Permission.locationWhenInUse.request();
+    } else if (status.isPermanentlyDenied) {
+      openAppSettings();
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        isLocationPermission = status.isGranted;
+      });
+    }
+  }
+
+  Future<void> _handlePhotosPermission() async {
+    var status = await Permission.photos.status;
+
+    if (status.isDenied) {
+      status = await Permission.photos.request();
+    } else if (status.isPermanentlyDenied) {
+      openAppSettings();
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        isPhotosPermission = status.isGranted;
+      });
+    }
+  }
+
+  Future<void> _handleNotificationsPermission() async {
+    var status = await Permission.notification.status;
+
+    if (status.isDenied) {
+      status = await Permission.notification.request();
+    } else if (status.isPermanentlyDenied) {
+      openAppSettings();
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        isNotificationsPermission = status.isGranted;
+      });
+    }
+  }
+
+  Widget _buildPermissionExplanation(IconData icon, String title, String description) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: const Color(0xff2e6f40)),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.montserrat(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                style: GoogleFonts.montserrat(
+                  fontSize: 14,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -186,24 +272,26 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                   child: const Divider(color: Colors.black),
                 ),
                 SwitchListTile(
-                  title: Text(
-                    'Location permission',
-                    style: GoogleFonts.montserrat(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
+                  title: Row(
+                    children: [
+                      const Icon(Icons.location_on, color: Color(0xff2e6f40)),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Location permission',
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
                   ),
                   value: isLocationPermission,
                   activeColor: Colors.white,
                   activeTrackColor: const Color(0xff2e6f40),
                   onChanged: (value) async {
                     if (value) {
-                      PermissionStatus status = await Permission.location.request();
-                      setState(() {
-                        isLocationPermission = status.isGranted;
-                      });
+                      await _handleLocationPermission();
                     } else {
-                      // Open app settings if user wants to revoke permission
                       openAppSettings();
                     }
                   },
@@ -211,34 +299,145 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                   inactiveThumbColor: Colors.white,
                 ),
                 SwitchListTile(
-                  title: Text(
-                    'Storage permission',
-                    style: GoogleFonts.montserrat(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
+                  title: Row(
+                    children: [
+                      const Icon(Icons.photo_library, color: Color(0xff2e6f40)),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Photo gallery permission',
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
                   ),
-                  value: isStoragePermission,
+                  value: isPhotosPermission,
                   activeColor: Colors.white,
                   activeTrackColor: const Color(0xff2e6f40),
                   onChanged: (value) async {
                     if (value) {
-                      PermissionStatus status = await Permission.storage.request();
-                      setState(() {
-                        isStoragePermission = status.isGranted;
-                      });
+                      await _handlePhotosPermission();
                     } else {
-                      // Open app settings if user wants to revoke permission
                       openAppSettings();
                     }
                   },
                   inactiveTrackColor: Colors.grey,
                   inactiveThumbColor: Colors.white,
                 ),
+                SwitchListTile(
+                  title: Row(
+                    children: [
+                      const Icon(Icons.notifications, color: Color(0xff2e6f40)),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Notifications permission',
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                  value: isNotificationsPermission,
+                  activeColor: Colors.white,
+                  activeTrackColor: const Color(0xff2e6f40),
+                  onChanged: (value) async {
+                    if (value) {
+                      await _handleNotificationsPermission();
+                    } else {
+                      openAppSettings();
+                    }
+                  },
+                  inactiveTrackColor: Colors.grey,
+                  inactiveThumbColor: Colors.white,
+                ),
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return Dialog(
+                          backgroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Understanding App Permissions',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xff2e6f40),
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                _buildPermissionExplanation(
+                                  Icons.location_on,
+                                  'Location',
+                                  'Enables discovery of nearby campsites and enhances your map navigation experience. This helps you easily find and navigate to your perfect camping destination.',
+                                ),
+                                const SizedBox(height: 15),
+                                _buildPermissionExplanation(
+                                  Icons.photo_library,
+                                  'Photo Gallery',
+                                  'Allows you to save memorable campsite photos and share them with friends and family. For campsite owners, this enables showcasing their facilities through high-quality images.',
+                                ),
+                                const SizedBox(height: 15),
+                                _buildPermissionExplanation(
+                                  Icons.notifications,
+                                  'Notifications',
+                                  'Keeps you informed about your booking status, upcoming stays, and exclusive offers from your favorite campsites. Stay connected with important updates about your outdoor adventures.',
+                                ),
+                                const SizedBox(height: 20),
+                                Center(
+                                  child: TextButton(
+                                    onPressed: () => Navigator.of(context).pop(),
+                                    child: Text(
+                                      'I understand',
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: const Color(0xff2e6f40),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.help_outline,
+                        color: Color(0xff2e6f40),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Why do we need these permissions?',
+                        style: GoogleFonts.montserrat(
+                          color: const Color(0xff2e6f40),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 const Spacer(),
                 GestureDetector(
                   onTap: () {
-                    if (isLocationPermission || isStoragePermission) {
+                    if (isLocationPermission || isPhotosPermission || isNotificationsPermission) {
                       completePreferences();
                     } else {
                       showDialog<void>(
@@ -307,7 +506,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                     }
                   },
                   child: Text(
-                    isLocationPermission || isStoragePermission ? 'Continue' : 'Skip',
+                    isLocationPermission || isPhotosPermission || isNotificationsPermission ? 'Continue' : 'Skip',
                     style: GoogleFonts.montserrat(
                       fontSize: 24.0,
                       fontWeight: FontWeight.bold,

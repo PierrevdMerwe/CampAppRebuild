@@ -1,4 +1,3 @@
-// lib/src/home/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +7,8 @@ import '../widgets/category_grid.dart';
 import '../widgets/location_list.dart';
 import '../widgets/popular_listings.dart';
 import '../widgets/search_bar.dart';
+import '../widgets/sliding_menu.dart';
+import '../widgets/social_footer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -17,9 +18,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  late AnimationController _animationController;
   final ScrollController _scrollController = ScrollController();
-  bool _isMenuOpen = false;
   Color _textColor = Colors.white;
 
   final Map<String, IconData> categories = {
@@ -50,6 +50,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
   }
 
   void _onScroll() {
@@ -59,10 +63,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     });
   }
 
+  void _toggleMenu() {
+    if (_animationController.value == 0) {
+      _animationController.forward();
+    } else {
+      _animationController.reverse();
+    }
+  }
+
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -71,54 +84,117 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     return Consumer<ThemeModel>(
       builder: (context, themeModel, child) {
         return Scaffold(
-          key: _scaffoldKey,
-          endDrawer: _buildDrawer(themeModel),
           backgroundColor: themeModel.isDark ? Colors.black : Colors.white,
-          body: CustomScrollView(
-            controller: _scrollController,
-            slivers: <Widget>[
-              SliverAppBar(
-                expandedHeight: MediaQuery.of(context).size.height * 0.25,
-                pinned: true,
-                elevation: 0,
-                automaticallyImplyLeading: false,
-                actions: [_buildMenuButton()],
-                flexibleSpace: HomeBanner(textColor: _textColor),
-              ),
-              SliverPadding(
-                padding: EdgeInsets.only(
-                    top: MediaQuery.of(context).size.height * 0.03
+          body: Stack(
+            children: [
+              // Main Content
+              AnimatedBuilder(
+                animation: _animationController,
+                builder: (context, child) {
+                  return Transform(
+                    alignment: Alignment.centerRight,
+                    transform: Matrix4.identity()
+                      ..setEntry(3, 2, 0.001)
+                      ..rotateY(-0.3 * _animationController.value)
+                      ..translate(-MediaQuery.of(context).size.width * 0.4 * _animationController.value)
+                      ..scale(1 - 0.2 * _animationController.value),
+                    child: child,
+                  );
+                },
+                child: GestureDetector(
+                  onTap: _animationController.value == 1 ? _toggleMenu : null,
+                  child: Container(
+                    color: themeModel.isDark ? Colors.black : Colors.white,
+                    child: CustomScrollView(
+                      controller: _scrollController,
+                      slivers: <Widget>[
+                        SliverAppBar(
+                          expandedHeight: MediaQuery.of(context).size.height * 0.25,
+                          pinned: true,
+                          elevation: 0,
+                          backgroundColor: const Color(0xffF5F8F5),
+                          automaticallyImplyLeading: false,
+                          actions: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8.0, right: 8.0),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.menu,
+                                  color: Color(0xff2e6f40),
+                                  size: 32,
+                                ),
+                                onPressed: _toggleMenu,
+                                padding: EdgeInsets.zero,
+                                alignment: Alignment.topRight,
+                              ),
+                            ),
+                          ],
+                          flexibleSpace: HomeBanner(textColor: _textColor),
+                        ),
+                        SliverPadding(
+                          padding: EdgeInsets.only(
+                              top: MediaQuery.of(context).size.height * 0.03
+                          ),
+                        ),
+                        SliverPersistentHeader(
+                          delegate: _SearchBarDelegate(),
+                          pinned: true,
+                        ),
+                        _buildSectionTitle(
+                          'Popular Listings',
+                          themeModel.isDark,
+                          topPadding: 40,
+                        ),
+                        const SliverToBoxAdapter(
+                          child: PopularListings(),
+                        ),
+                        _buildSectionTitle(
+                          'Explore Special Campsites Categories',
+                          themeModel.isDark,
+                        ),
+                        SliverToBoxAdapter(
+                          child: CategoryGrid(
+                            categories: categories,
+                            categoryColors: categoryColors,
+                          ),
+                        ),
+                        _buildSectionTitle(
+                          'Explore Locations',
+                          themeModel.isDark,
+                        ),
+                        SliverToBoxAdapter(
+                          child: LocationList(
+                            locations: LocationData.getAllLocations(),
+                          ),
+                        ),
+                        const SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.only(top: 40.0),
+                            child: SocialFooter(),
+                          ),
+                        ),
+                        const SliverPadding(
+                          padding: EdgeInsets.only(bottom: 20.0),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-              SliverPersistentHeader(
-                delegate: _SearchBarDelegate(),
-                pinned: true,
-              ),
-              _buildSectionTitle(
-                'Popular Listings',
-                themeModel.isDark,
-                topPadding: 40,
-              ),
-              const SliverToBoxAdapter(
-                child: PopularListings(),
-              ),
-              _buildSectionTitle(
-                'Explore Special Campsites Categories',
-                themeModel.isDark,
-              ),
-              SliverToBoxAdapter(
-                child: CategoryGrid(
-                  categories: categories,
-                  categoryColors: categoryColors,
-                ),
-              ),
-              _buildSectionTitle(
-                'Explore Locations',
-                themeModel.isDark,
-              ),
-              SliverToBoxAdapter(
-                child: LocationList(
-                  locations: LocationData.getAllLocations(),
+              // Menu
+              Positioned(
+                right: 0,
+                top: 0,
+                bottom: 0,
+                child: AnimatedBuilder(
+                  animation: _animationController,
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(MediaQuery.of(context).size.width * 0.6 * (1 - _animationController.value), 0),
+                      child: child,
+                    );
+                  },
+                  child: SlidingMenu(onClose: _toggleMenu),
                 ),
               ),
             ],
@@ -128,94 +204,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildMenuButton() {
-    return Padding(
-      padding: const EdgeInsets.only(right: 10.0, top: 10.0),
-      child: IconButton(
-        icon: const Icon(
-          Icons.menu,
-          color: Color(0xff2e6f40),
-          size: 40,
-        ),
-        onPressed: () {
-          if (_isMenuOpen) {
-            Navigator.of(context).maybePop();
-          } else {
-            _scaffoldKey.currentState!.openEndDrawer();
-          }
-          setState(() {
-            _isMenuOpen = !_isMenuOpen;
-          });
-        },
-      ),
-    );
-  }
-
-  Widget _buildDrawer(ThemeModel themeModel) {
-    return Drawer(
-      child: ListView(
-        padding: const EdgeInsets.only(top: 70.0),
-        children: <Widget>[
-          _buildDrawerItem(Icons.home, 'Home', () {}),
-          const SizedBox(height: 10),
-          _buildCampingExpansionTile(),
-          const SizedBox(height: 10),
-          _buildDrawerItem(Icons.business, 'Business Providers', () {}),
-          const SizedBox(height: 10),
-          _buildDrawerItem(Icons.shopping_cart_outlined, 'Shop', () {}),
-          const SizedBox(height: 10),
-          _buildDrawerItem(Icons.contact_mail, 'Contact us', () {}),
-          const SizedBox(height: 325),
-          _buildDrawerButton('Sign in'),
-          const SizedBox(height: 10),
-          _buildDrawerButton('Add listing'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem(IconData icon, String title, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(
-        title,
-        style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
-      ),
-      onTap: onTap,
-    );
-  }
-
-  Widget _buildCampingExpansionTile() {
-    return ExpansionTile(
-      leading: const Icon(Icons.forest),
-      title: Text(
-        'Camping',
-        style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
-      ),
-      iconColor: const Color(0xff2e6f40),
-      children: <Widget>[
-        _buildDrawerItem(Icons.place, 'Namibia', () {}),
-        const SizedBox(height: 10),
-        _buildDrawerItem(Icons.check_box, 'Camping checklist', () {}),
-        const SizedBox(height: 10),
-        _buildDrawerItem(Icons.map, 'Roadtrip planner', () {}),
-      ],
-    );
-  }
-
-  Widget _buildDrawerButton(String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 40.0),
-      child: ElevatedButton(
-        onPressed: () {},
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xff2e6f40),
+  Widget _buildSectionTitle(String title, bool isDark, {double topPadding = 40}) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: EdgeInsets.only(
+          top: topPadding,
+          bottom: 20,
+          left: 24,
         ),
         child: Text(
-          text,
+          title,
           style: GoogleFonts.montserrat(
+            fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: isDark ? Colors.white : Colors.black,
           ),
         ),
       ),
@@ -226,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return CustomSearchBar();
+    return const CustomSearchBar();
   }
 
   @override
@@ -237,24 +239,4 @@ class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(_SearchBarDelegate oldDelegate) => false;
-}
-
-Widget _buildSectionTitle(String title, bool isDark, {double topPadding = 40}) {
-  return SliverToBoxAdapter(
-    child: Padding(
-      padding: EdgeInsets.only(
-        top: topPadding,
-        bottom: 20,
-        left: 24,
-      ),
-      child: Text(
-        title,
-        style: GoogleFonts.montserrat(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: isDark ? Colors.white : Colors.black,
-        ),
-      ),
-    ),
-  );
 }

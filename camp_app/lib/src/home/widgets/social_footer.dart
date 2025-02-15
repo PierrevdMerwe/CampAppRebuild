@@ -1,6 +1,6 @@
-// lib/src/home/widgets/social_footer.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class SocialFooter extends StatelessWidget {
   const SocialFooter({super.key});
@@ -32,31 +32,38 @@ class SocialFooter extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildSocialIcon(Icons.tiktok, 'TikTok'),
+            _buildSocialIcon(FontAwesomeIcons.facebookF, () {}),
             const SizedBox(width: 24),
-            _buildSocialIcon(Icons.camera_alt, 'Instagram'),
+            _buildSocialIcon(FontAwesomeIcons.xTwitter, () {}),
             const SizedBox(width: 24),
-            _buildSocialIcon(Icons.facebook, 'Facebook'),
+            _buildSocialIcon(FontAwesomeIcons.instagram, () {}),
             const SizedBox(width: 24),
-            _buildSocialIcon(Icons.message, 'X'),
+            _buildSocialIcon(FontAwesomeIcons.tiktok, () {}),
           ],
         ),
-        const SizedBox(height: 30), // Bottom padding
+        const SizedBox(height: 30),
       ],
     );
   }
 
-  Widget _buildSocialIcon(IconData icon, String platform) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        shape: BoxShape.circle,
-      ),
-      child: Icon(
-        icon,
-        size: 24,
-        color: const Color(0xff2e6f40),
+  Widget _buildSocialIcon(IconData icon, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(25),
+      child: Container(
+        width: 50, // Fixed width
+        height: 50, // Fixed height (same as width to ensure circle)
+        decoration: BoxDecoration(
+          color: const Color(0xff2e6f40).withValues(alpha: 0.1),
+          shape: BoxShape.circle, // Use shape instead of borderRadius
+        ),
+        child: Center( // Center the icon
+          child: FaIcon(
+            icon,
+            size: 20,
+            color: const Color(0xff2e6f40),
+          ),
+        ),
       ),
     );
   }
