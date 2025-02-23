@@ -12,7 +12,6 @@ class UserProvider extends ChangeNotifier {
 
   UserModel? get user => _user;
 
-  // lib/src/auth/providers/user_provider.dart
   Future<void> loadUserData() async {
     final currentUser = _auth.currentUser;
     print('🔍 Current Firebase user: ${currentUser?.uid}');
@@ -32,26 +31,57 @@ class UserProvider extends ChangeNotifier {
       notifyListeners();
     }
 
-    // Fetch fresh data from Firestore
+    // Check if user is a site owner first
     try {
-      print('🔄 Fetching fresh data from Firestore for uid: ${currentUser.uid}');
+      print('🔍 Checking if user is a site owner...');
+      final siteOwnerDoc = await _firestore
+          .collection('site_owners')
+          .where('firebase_uid', isEqualTo: currentUser.uid)
+          .get();
+
+      print('📊 Found ${siteOwnerDoc.docs.length} site owner documents');
+
+      // In UserProvider class, update the site owner data mapping:
+      if (siteOwnerDoc.docs.isNotEmpty) {
+        print('🏕️ Loading site owner data...');
+        final data = siteOwnerDoc.docs.first.data();
+        print('📄 Site owner data: $data');
+
+        _user = UserModel(
+          uid: currentUser.uid,
+          email: data['email'] ?? '',
+          name: data['campsite_name'] ?? '', // Using campsite_name directly
+          username: '', // Not using username for site owners
+          userType: 'site_owner',
+          createdAt: (data['created_at'] as Timestamp).toDate(),
+          userNumber: data['phone'] ?? '',
+        );
+
+        print('👤 Created Site Owner UserModel: name=${_user?.name}');
+        await prefs.setString('user_data', _user!.toJson());
+        notifyListeners();
+        return;
+      }
+
+      // If not a site owner, check regular users collection
+      print('👤 Not a site owner, checking users collection...');
       final userDoc = await _firestore
           .collection('users')
           .where('firebase_uid', isEqualTo: currentUser.uid)
           .get();
 
-      print('📊 Found ${userDoc.docs.length} matching documents');
+      print('📊 Found ${userDoc.docs.length} user documents');
 
       if (userDoc.docs.isNotEmpty) {
         final data = userDoc.docs.first.data();
-        print('📄 Firestore data: $data');
+        print('📄 User data: $data');
 
         _user = UserModel(
           uid: currentUser.uid,
           email: data['email'] ?? '',
           name: data['full_name'] ?? '',
           username: data['username'] ?? '',
-          userType: data['user_type'] ?? 'camper',
+          userType: 'camper',
           createdAt: (data['created_at'] as Timestamp).toDate(),
           userNumber: data['user_number'] ?? '',
         );
@@ -72,36 +102,47 @@ class UserProvider extends ChangeNotifier {
   Future<void> updateUserProfile({
     required String name,
     required String username,
+    String? phone,
   }) async {
     try {
+      print('🔄 Starting profile update for user: ${_user?.uid}');
+
       if (_user == null || _auth.currentUser == null) {
         throw 'No user logged in';
       }
 
-      // Check if username is taken by another user
-      if (username != _user!.username) {
-        final isUnique = await _firestore
-            .collection('users')
-            .where('username', isEqualTo: username)
-            .where('firebase_uid', isNotEqualTo: _auth.currentUser!.uid)
-            .get()
-            .then((snapshot) => snapshot.docs.isEmpty);
+      // Determine collection based on user type
+      final isOwner = _user!.userType == 'site_owner';
+      final collection = isOwner ? 'site_owners' : 'users';
+      print('📁 Updating in collection: $collection');
 
-        if (!isUnique) {
-          throw 'Username is already taken';
+      if (!isOwner) {
+        // Check if username is taken by another user (only for regular users)
+        if (username != _user!.username) {
+          final isUnique = await _firestore
+              .collection('users')
+              .where('username', isEqualTo: username)
+              .where('firebase_uid', isNotEqualTo: _auth.currentUser!.uid)
+              .get()
+              .then((snapshot) => snapshot.docs.isEmpty);
+
+          if (!isUnique) {
+            throw 'Username is already taken';
+          }
         }
       }
 
       // Update Firestore
       await _firestore
-          .collection('users')
+          .collection(collection)
           .where('firebase_uid', isEqualTo: _auth.currentUser!.uid)
           .get()
           .then((snapshot) {
         if (snapshot.docs.isNotEmpty) {
+          print('📝 Updating document in Firestore');
           return snapshot.docs.first.reference.update({
-            'full_name': name,
-            'username': username,
+            if (isOwner) 'campsite_name': name else 'full_name': name,
+            if (!isOwner) 'username': username,
           });
         }
       });
@@ -109,16 +150,17 @@ class UserProvider extends ChangeNotifier {
       // Update local user model
       _user = _user!.copyWith(
         name: name,
-        username: username,
+        username: isOwner ? name : username,
       );
 
       // Update SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('user_data', _user!.toJson());
 
+      print('✅ Profile update completed successfully');
       notifyListeners();
     } catch (e) {
-      print('Error updating profile: $e');
+      print('❌ Error updating profile: $e');
       throw e.toString();
     }
   }
@@ -135,6 +177,7 @@ class UserProvider extends ChangeNotifier {
   }
 
   Future<void> clearUserData() async {
+    print('🧹 Clearing user data');
     _user = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user_data');

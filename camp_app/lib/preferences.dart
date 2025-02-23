@@ -1,5 +1,9 @@
+import 'package:camp_app/src/auth/providers/user_provider.dart';
+import 'package:camp_app/src/campsite_owner/screens/owner_dashboard_screen.dart';
 import 'package:camp_app/src/core/config/theme/theme_model.dart';
 import 'package:camp_app/src/home/screens/home_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -32,10 +36,27 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('justSignedIn', false);
 
-    // Navigate to HomeScreen
+    if (!mounted) return;
+
+    // Get current Firebase user
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    // Check if user is a site owner
+    final isSiteOwner = await FirebaseFirestore.instance
+        .collection('site_owners')
+        .where('firebase_uid', isEqualTo: currentUser.uid)
+        .get()
+        .then((snapshot) => snapshot.docs.isNotEmpty);
+
+    // Navigate based on user type
     if (mounted) {
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        MaterialPageRoute(
+            builder: (context) => isSiteOwner
+                ? const OwnerDashboardScreen()
+                : const HomeScreen()
+        ),
             (Route<dynamic> route) => false,
       );
     }

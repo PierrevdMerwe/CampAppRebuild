@@ -3,6 +3,7 @@ import 'package:camp_app/src/auth/screens/pending_verification.dart';
 import 'package:camp_app/src/auth/screens/register.dart';
 import 'package:flutter/material.dart';
 import '../../../preferences.dart';
+import '../../campsite_owner/screens/owner_dashboard_screen.dart';
 import '../../utils/auth_utils.dart';
 import '../services/auth_service.dart';
 import '../widgets/auth_layout.dart';
@@ -71,10 +72,20 @@ class _LoginScreenState extends State<LoginScreen> {
             );
             return;
           }
+
+          // Verified campsite owner - go through preferences first
+          AuthUtils.showSuccessSnackbar(context, 'Successfully logged in!');
+          Future.delayed(const Duration(seconds: 2), () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const PreferencesScreen()),
+            );
+          });
+          return;
         }
 
+        // Regular user - go through preferences
         AuthUtils.showSuccessSnackbar(context, 'Successfully logged in!');
-
         Future.delayed(const Duration(seconds: 2), () {
           Navigator.pushReplacement(
             context,
