@@ -14,7 +14,14 @@ import '../widgets/social_login_buttons.dart';
 import '../../utils/form_validators.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  final String? prefilledEmail;
+  final String? userType;
+
+  const LoginScreen({
+    Key? key,
+    this.prefilledEmail,
+    this.userType,
+  }) : super(key: key);
 
   @override
   _LoginScreenState createState() => _LoginScreenState();
@@ -29,6 +36,21 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   String _userType = 'Camper';
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.prefilledEmail != null) {
+      _emailController.text = widget.prefilledEmail!;
+    }
+    if (widget.userType != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          _userType = widget.userType!;
+        });
+      });
+    }
+  }
 
   @override
   void dispose() {

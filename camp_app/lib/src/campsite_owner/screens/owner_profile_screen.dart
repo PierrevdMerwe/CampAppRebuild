@@ -1,4 +1,5 @@
-// lib/src/campsite_owner/screens/owner_profile_screen.dart
+// Complete updated version of owner_profile_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,6 +11,7 @@ import '../../shared/screens/coming_soon_screen.dart';
 import '../../home/widgets/social_footer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:developer' as developer;
+import '../../core/services/profile_icon_service.dart';
 
 import 'owner_personal_info_screen.dart';
 
@@ -65,7 +67,7 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
           Expanded(
             child: ListView(
               children: [
-                _buildProfileHeader(context),
+                const OwnerProfileHeader(), // Using our new stateful OwnerProfileHeader
                 const SizedBox(height: 24),
                 _buildMenuItem(
                   context,
@@ -141,15 +143,93 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
     );
   }
 
-  Widget _buildProfileHeader(BuildContext context) {
+  Widget _buildMenuItem(
+      BuildContext context,
+      IconData icon,
+      String title,
+      VoidCallback onTap,
+      ) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      leading: Icon(icon, color: const Color(0xff2e6f40), size: 28),
+      title: Text(
+        title,
+        style: GoogleFonts.montserrat(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+      onTap: onTap,
+    );
+  }
+}
+
+// New stateful OwnerProfileHeader widget to handle loading the profile icon
+class OwnerProfileHeader extends StatefulWidget {
+  const OwnerProfileHeader({super.key});
+
+  @override
+  State<OwnerProfileHeader> createState() => _OwnerProfileHeaderState();
+}
+
+class _OwnerProfileHeaderState extends State<OwnerProfileHeader> {
+  final ProfileIconService _profileIconService = ProfileIconService();
+  Map<String, dynamic>? _profileIconData;
+  bool _isLoadingIcon = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileIcon();
+  }
+
+  Future<void> _loadProfileIcon() async {
+    setState(() {
+      _isLoadingIcon = true;
+    });
+
+    try {
+      final iconData = await _profileIconService.getUserProfileIcon();
+      if (mounted) {
+        setState(() {
+          _profileIconData = iconData;
+          _isLoadingIcon = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading profile icon: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingIcon = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 50,
-            backgroundColor: Color(0xff2e6f40),
-            child: FaIcon(
+            backgroundColor: _isLoadingIcon
+                ? const Color(0xff2e6f40)
+                : Color(int.parse(
+                "0x${_profileIconData?['background'] ?? 'FF2E6F40'}")),
+            child: _isLoadingIcon
+                ? const CircularProgressIndicator(color: Colors.white)
+                : _profileIconData != null
+                ? FaIcon(
+              _profileIconService.getIconData(
+                _profileIconData!['icon'],
+              ),
+              size: 40,
+              color: Colors.white,
+            )
+                : const FaIcon(
               FontAwesomeIcons.tent,
               size: 40,
               color: Colors.white,
@@ -183,7 +263,7 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xff2e6f40).withValues(alpha: 0.1),
+                      color: const Color(0xff2e6f40).withValues(alpha: .1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -201,27 +281,6 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildMenuItem(
-      BuildContext context,
-      IconData icon,
-      String title,
-      VoidCallback onTap,
-      ) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      leading: Icon(icon, color: const Color(0xff2e6f40), size: 28),
-      title: Text(
-        title,
-        style: GoogleFonts.montserrat(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-      onTap: onTap,
     );
   }
 }

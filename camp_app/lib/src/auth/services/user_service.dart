@@ -2,6 +2,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../utils/auth_utils.dart';
 import 'dart:developer' as developer;
+import '../../core/services/profile_icon_service.dart';
 
 class UserService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -19,11 +20,13 @@ class UserService {
     return querySnapshot.docs.isEmpty;
   }
 
+  // Update the createUser method in user_service.dart
   Future<void> createUser({
     required String uid,
     required String email,
     required String displayName,
     required String username,
+    String? siteOwnerUid,
   }) async {
     try {
       _logDebug('📝 Creating new camper in users collection');
@@ -39,6 +42,10 @@ class UserService {
       // Generate unique user number
       final userNumber = await generateUniqueUserNumber();
 
+      // Create profile icon service
+      final profileIconService = ProfileIconService();
+      final profileIcon = profileIconService.generateRandomProfileIcon();
+
       // Create user document with formatted name as ID
       await _firestore.collection('users').doc(formattedName).set({
         'firebase_uid': uid,
@@ -48,6 +55,8 @@ class UserService {
         'user_number': userNumber,
         'created_at': FieldValue.serverTimestamp(),
         'bookings': [],
+        'profile': profileIcon,  // Add the profile icon
+        if (siteOwnerUid != null) 'site_owner_uid': siteOwnerUid,
       });
 
       _logDebug('✅ Successfully created camper profile');

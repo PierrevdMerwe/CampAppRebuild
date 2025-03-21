@@ -2,6 +2,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:developer' as developer;
 
+import '../../core/services/profile_icon_service.dart';
 import '../../utils/auth_utils.dart';
 
 class SiteOwnerService {
@@ -12,12 +13,23 @@ class SiteOwnerService {
     developer.log('$emoji $message', name: 'SiteOwnerService');
   }
 
-  Future<void> createSiteOwner(String uid, String campsiteName, String email, String phone) async {
+  // Update the createSiteOwner method in site_owner_service.dart
+  Future<void> createSiteOwner(
+      String uid,
+      String campsiteName,
+      String email,
+      String phone,
+      {String? camperUid}
+      ) async {
     try {
       _logDebug('📝 Creating new site owner in site_owners collection');
 
       // Format the campsite name for document ID
       final formattedName = AuthUtils.formatNameForFirestore(campsiteName);
+
+      // Create profile icon service
+      final profileIconService = ProfileIconService();
+      final profileIcon = profileIconService.generateRandomProfileIcon();
 
       await _firestore.collection('site_owners').doc(formattedName).set({
         'firebase_uid': uid,
@@ -28,6 +40,8 @@ class SiteOwnerService {
         'status': 'pending',
         'created_at': FieldValue.serverTimestamp(),
         'owned_sites': [],
+        'profile': profileIcon,  // Add the profile icon
+        if (camperUid != null) 'camper_uid': camperUid,
       });
 
       _logDebug('✅ Successfully created site owner profile');

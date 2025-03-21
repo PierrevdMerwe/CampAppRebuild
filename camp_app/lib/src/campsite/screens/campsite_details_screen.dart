@@ -6,8 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
-
 import '../../shared/widgets/cached_firebase_image.dart';
+import '../services/favorite_service.dart';
 import 'campsite_search_screen.dart';
 
 class CampsiteDetailsPage extends StatefulWidget {
@@ -19,13 +19,82 @@ class CampsiteDetailsPage extends StatefulWidget {
   _CampsiteDetailsPageState createState() => _CampsiteDetailsPageState();
 }
 
-class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> {
+class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> with SingleTickerProviderStateMixin {
   late Future<List<String>> futureImages;
+  bool _isFavorite = false;
+  bool _isCheckingFavorite = true;
+  final FavoriteService _favoriteService = FavoriteService();
+  late AnimationController _favoriteAnimController;
+  late Animation<double> _favoriteScaleAnimation;
 
   @override
   void initState() {
     super.initState();
     futureImages = _getAllImageUrls(widget.campsite);
+    // Create animation controller for heart icon
+    _favoriteAnimController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    _favoriteScaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 1.3)
+            .chain(CurveTween(curve: Curves.easeIn)),
+        weight: 50,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.3, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 50,
+      ),
+    ]).animate(_favoriteAnimController);
+
+    // Check if this campsite is a favorite
+    _checkFavoriteStatus();
+  }
+
+  @override
+  void dispose() {
+    _favoriteAnimController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkFavoriteStatus() async {
+    setState(() {
+      _isCheckingFavorite = true;
+    });
+
+    try {
+      _isFavorite = await _favoriteService.isCampsiteFavorite(widget.campsite.id);
+    } catch (e) {
+      print('Error checking favorite status: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCheckingFavorite = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    try {
+      final newStatus = await _favoriteService.toggleFavorite(widget.campsite.id);
+
+      if (mounted) {
+        setState(() {
+          _isFavorite = newStatus;
+        });
+
+        // Play animation when adding to favorites
+        if (_isFavorite) {
+          _favoriteAnimController.forward(from: 0.0);
+        }
+      }
+    } catch (e) {
+      print('Error toggling favorite status: $e');
+    }
   }
 
   Future<List<String>> _getAllImageUrls(DocumentSnapshot campsite) async {
@@ -230,11 +299,25 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> {
                     alignment: Alignment.centerLeft,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: IconButton(
-                        icon: const Icon(Icons.share),
-                        onPressed: () {
-                          // TODO: Implement share functionality
-                        },
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.share),
+                            onPressed: () {
+                              // TODO: Implement share functionality
+                            },
+                          ),
+                          ScaleTransition(
+                            scale: _favoriteScaleAnimation,
+                            child: IconButton(
+                              icon: Icon(
+                                _isFavorite ? Icons.favorite : Icons.favorite_border,
+                                color: _isFavorite ? Colors.red : Colors.grey,
+                              ),
+                              onPressed: _isCheckingFavorite ? null : _toggleFavorite,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

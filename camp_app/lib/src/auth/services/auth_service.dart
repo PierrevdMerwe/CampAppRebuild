@@ -18,6 +18,7 @@ class AuthService {
     developer.log('$emoji $message', name: 'AuthService');
   }
 
+  // Add these parameters to the registerWithEmail method in auth_service.dart
   Future<UserCredential?> registerWithEmail({
     required String email,
     required String password,
@@ -27,6 +28,8 @@ class AuthService {
     String? displayName,
     String? phone,
     String? campsiteName,
+    String? linkToCamperUid,  // Added: UID of camper to link to (for owner accounts)
+    String? linkToOwnerUid,   // Added: UID of owner to link to (for camper accounts)
   }) async {
     try {
       _logDebug('📝 Starting registration process for ${isCampOwner ? 'site owner' : 'camper'}');
@@ -44,11 +47,13 @@ class AuthService {
             throw 'Campsite name and phone are required for site owners';
           }
 
+          // Pass linkToCamperUid to createSiteOwner method
           await _siteOwnerService.createSiteOwner(
             userCredential.user!.uid,
             campsiteName,
             email,
             phone,
+            camperUid: linkToCamperUid,
           );
 
           _logDebug('✅ Site owner registered successfully');
@@ -64,6 +69,7 @@ class AuthService {
             email: email,
             displayName: displayName ?? name,
             username: username,
+            siteOwnerUid: linkToOwnerUid,
           );
 
           _logDebug('✅ Camper registered successfully');

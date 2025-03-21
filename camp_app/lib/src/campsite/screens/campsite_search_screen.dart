@@ -403,20 +403,20 @@ class _SearchScreenState extends State<SearchScreen> {
                                         icon: Icon(categories[category],
                                             size: 18.0,
                                             color: isSelected
-                                                ? Colors.pink.shade50
+                                                ? Colors.white
                                                 : const Color(0xff2e6f40)),
                                         label: Text(category,
                                             style: GoogleFonts.montserrat(
                                                 color: isSelected
-                                                    ? Colors.pink.shade50
+                                                    ? Colors.white
                                                     : const Color(0xff2e6f40))),
                                         style: ElevatedButton.styleFrom(
                                           foregroundColor: isSelected
-                                              ? Colors.pink.shade50
+                                              ? Colors.white
                                               : const Color(0xff2e6f40),
                                           backgroundColor: isSelected
                                               ? const Color(0xff2e6f40)
-                                              : Colors.pink.shade50,
+                                              : Colors.grey[200],
                                           shape: RoundedRectangleBorder(
                                             borderRadius:
                                                 BorderRadius.circular(25),
@@ -649,7 +649,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         foregroundColor:
                             _showMap ? const Color(0xff2e6f40) : Colors.white,
                         backgroundColor: _showMap
-                            ? Colors.pink.shade50
+                            ? Colors.grey[200]
                             : const Color(0xff2e6f40),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15),
@@ -660,10 +660,24 @@ class _SearchScreenState extends State<SearchScreen> {
                           _showMap = !_showMap;
                         });
                       },
-                      child: const Row(
+                      child: Row(
                         children: [
-                          Icon(Icons.map),
-                          Text('Map'),
+                          Icon(
+                            Icons.map,
+                            color: _showMap
+                                ? const Color(0xff2e6f40)
+                                : Colors
+                                    .white, // White when not selected, green when selected
+                          ),
+                          Text(
+                            'Map',
+                            style: TextStyle(
+                              color: _showMap
+                                  ? const Color(0xff2e6f40)
+                                  : Colors
+                                      .white, // White when not selected, green when selected
+                            ),
+                          ),
                         ],
                       ),
                     ),

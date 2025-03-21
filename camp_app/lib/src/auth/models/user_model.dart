@@ -58,6 +58,7 @@ class UserModel {
     };
   }
 
+  // Fix in UserModel.fromMap method in user_model.dart
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
       uid: map['uid'] ?? '',
@@ -67,7 +68,7 @@ class UserModel {
       userType: map['userType'] ?? 'camper',
       createdAt: DateTime.parse(map['createdAt']),
       bookings: List<String>.from(map['bookings'] ?? []),
-      userNumber: map['user_number'] ?? '',
+      userNumber: map['userNumber'] ?? '',
     );
   }
 

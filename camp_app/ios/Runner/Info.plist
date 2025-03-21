@@ -51,6 +51,13 @@
     <string>Access to your photo gallery allows you to save and share campsite photos.</string>
     <key>NSUserNotificationUsageDescription</key>
     <string>We'll send you updates about your bookings and special offers from campsites.</string>
+    <!-- URL Launcher permissions -->
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+      <string>https</string>
+      <string>http</string>
+      <string>mailto</string>
+    </array>
     <!-- Remove this comment and the duplicate CFBundleURLTypes -->
         <key>CFBundleURLTypes</key>
         <array>

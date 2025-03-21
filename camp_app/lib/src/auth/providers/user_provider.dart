@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/services/profile_icon_service.dart';
 import '../models/user_model.dart';
 
 class UserProvider extends ChangeNotifier {
@@ -119,12 +120,19 @@ class UserProvider extends ChangeNotifier {
       if (!isOwner) {
         // Check if username is taken by another user (only for regular users)
         if (username != _user!.username) {
-          final isUnique = await _firestore
+          // MODIFIED: Simplified query to avoid index issues
+          final usernameQuery = await _firestore
               .collection('users')
               .where('username', isEqualTo: username)
-              .where('firebase_uid', isNotEqualTo: _auth.currentUser!.uid)
-              .get()
-              .then((snapshot) => snapshot.docs.isEmpty);
+              .get();
+
+          bool isUnique = true;
+          for (var doc in usernameQuery.docs) {
+            if (doc['firebase_uid'] != _auth.currentUser!.uid) {
+              isUnique = false;
+              break;
+            }
+          }
 
           if (!isUnique) {
             throw 'Username is already taken';
@@ -179,8 +187,14 @@ class UserProvider extends ChangeNotifier {
   Future<void> clearUserData() async {
     print('🧹 Clearing user data');
     _user = null;
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user_data');
+
+    // Also clear profile icon cache
+    final profileIconService = ProfileIconService();
+    await profileIconService.clearProfileIconCache();
+
     notifyListeners();
   }
 }

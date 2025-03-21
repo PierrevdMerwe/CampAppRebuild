@@ -1,19 +1,106 @@
 // lib/src/campsite_owner/widgets/owner_sliding_menu.dart
 import 'package:camp_app/src/campsite_owner/screens/owner_profile_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../auth/providers/user_provider.dart';
+import '../../auth/screens/account_linking_screen.dart';
+import '../../auth/services/account_linking_service.dart';
 import '../../core/config/theme/theme_model.dart';
+import '../../core/services/profile_icon_service.dart';
 import '../../settings/screens/settings_screen.dart';
+import '../../shared/widgets/account_switch_card.dart';
 
 class OwnerSlidingMenu extends StatelessWidget {
   final VoidCallback onClose;
+  final AccountLinkingService _linkingService = AccountLinkingService();
 
-  const OwnerSlidingMenu({
+  OwnerSlidingMenu({
     super.key,
     required this.onClose,
   });
+
+  Widget _buildAccountSection(BuildContext context, String? ownerUid) {
+    // Temporarily hide the account linking section
+    // Keep all the code intact for future use
+    return const SizedBox.shrink();
+
+    // Original implementation below kept for reference
+    /*
+  if (ownerUid == null) return const SizedBox.shrink();
+
+  return FutureBuilder<Map<String, dynamic>?>(
+    future: _linkingService.getLinkedCamperAccount(ownerUid),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const CircularProgressIndicator();
+      }
+
+      final linkedAccount = snapshot.data;
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+      if (linkedAccount != null) {
+        // Show switch account card
+        return AccountSwitchCard(
+          targetAccountType: "camper",
+          accountIdentifier: linkedAccount['username'] ?? 'Camper Account',
+          currentUid: userProvider.user?.uid ?? '',
+        );
+      }
+
+      // Show link account button
+      return Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Would you like to browse campsites\nand make bookings as a camper?',
+              style: GoogleFonts.montserrat(
+                fontSize: 14,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  onClose(); // Close the menu first
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AccountLinkingScreen(
+                        isLinkingToOwner: false,
+                      ),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xff2e6f40),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  'Link Camper Account',
+                  style: GoogleFonts.montserrat(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+  */
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,48 +115,15 @@ class OwnerSlidingMenu extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Profile Section
-                InkWell(
-                  onTap: () {
+                OwnerProfileMenuHeader(
+                  onProfileTap: () {
                     onClose();
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const OwnerProfileScreen()),
                     );
                   },
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: const BoxDecoration(
-                            color: Color(0xff2e6f40),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.person, color: Colors.white),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Consumer<UserProvider>(
-                            builder: (context, userProvider, _) {
-                              return Text(
-                                userProvider.user?.name ?? 'Site Owner', // Using name which contains campsite_name
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: onClose,
-                        ),
-                      ],
-                    ),
-                  ),
+                  onClose: onClose,
                 ),
 
                 const SizedBox(height: 32),
@@ -113,45 +167,9 @@ class OwnerSlidingMenu extends StatelessWidget {
                 ),
                 const Spacer(),
 
-                // Camper Account CTA
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Would you like to browse campsites\nand make bookings as a camper?',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 14,
-                          height: 1.5,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            // TODO: Handle camper registration
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xff2e6f40),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: Text(
-                            'Link here',
-                            style: GoogleFonts.montserrat(
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                Consumer<UserProvider>(
+                  builder: (context, userProvider, _) =>
+                      _buildAccountSection(context, userProvider.user?.uid),
                 ),
 
                 // Version Info
@@ -235,6 +253,122 @@ class _MenuItem extends StatelessWidget {
               ),
             ),
             if (trailing != null) trailing!,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class OwnerProfileMenuHeader extends StatefulWidget {
+  final VoidCallback onProfileTap;
+  final VoidCallback onClose;
+
+  const OwnerProfileMenuHeader({
+    Key? key,
+    required this.onProfileTap,
+    required this.onClose,
+  }) : super(key: key);
+
+  @override
+  State<OwnerProfileMenuHeader> createState() => _OwnerProfileMenuHeaderState();
+}
+
+class _OwnerProfileMenuHeaderState extends State<OwnerProfileMenuHeader> {
+  final ProfileIconService _profileIconService = ProfileIconService();
+  Map<String, dynamic>? _profileIconData;
+  bool _isLoadingIcon = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileIcon();
+  }
+
+  Future<void> _loadProfileIcon() async {
+    setState(() {
+      _isLoadingIcon = true;
+    });
+
+    try {
+      final iconData = await _profileIconService.getUserProfileIcon();
+      if (mounted) {
+        setState(() {
+          _profileIconData = iconData;
+          _isLoadingIcon = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading profile icon in menu: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingIcon = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: widget.onProfileTap,
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: _isLoadingIcon
+                    ? const Color(0xff2e6f40)
+                    : Color(int.parse(
+                    "0x${_profileIconData?['background'] ?? 'FF2E6F40'}")),
+                shape: BoxShape.circle,
+              ),
+              child: _isLoadingIcon
+                  ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+                  : _profileIconData != null
+                  ? Center(
+                child: FaIcon(
+                  _profileIconService.getIconData(
+                    _profileIconData!['icon'],
+                  ),
+                  size: 20,
+                  color: Colors.white,
+                ),
+              )
+                  : const FaIcon(
+                FontAwesomeIcons.tent,
+                size: 20,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Consumer<UserProvider>(
+                builder: (context, userProvider, _) {
+                  return Text(
+                    userProvider.user?.name ?? 'Site Owner',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  );
+                },
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: widget.onClose,
+            ),
           ],
         ),
       ),

@@ -1,12 +1,15 @@
-// lib/src/profile/screens/personal_info_screen.dart
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../auth/providers/user_provider.dart';
 import '../../auth/widgets/custom_text_field.dart';
 import '../../core/config/theme/theme_model.dart';
 import '../../shared/constants/app_colors.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../../core/services/profile_icon_service.dart';
 
 class PersonalInfoScreen extends StatefulWidget {
   const PersonalInfoScreen({super.key});
@@ -22,6 +25,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   late TextEditingController _userNumberController;
   late TextEditingController _joinedController;
   bool _isLoading = false;
+  final ProfileIconService _profileIconService = ProfileIconService();
+  Map<String, dynamic>? _profileIconData;
+  bool _isLoadingIcon = true;
 
   @override
   void initState() {
@@ -36,6 +42,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
           ? DateFormat('dd MMMM yyyy').format(user!.createdAt)
           : '',
     );
+    _loadProfileIcon();
   }
 
   @override
@@ -46,6 +53,29 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     _userNumberController.dispose();
     _joinedController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadProfileIcon() async {
+    setState(() {
+      _isLoadingIcon = true;
+    });
+
+    try {
+      final iconData = await _profileIconService.getUserProfileIcon();
+      if (mounted) {
+        setState(() {
+          _profileIconData = iconData;
+          _isLoadingIcon = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading profile icon: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingIcon = false;
+        });
+      }
+    }
   }
 
   Future<void> _updateProfile() async {
@@ -119,29 +149,27 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                             children: [
                               CircleAvatar(
                                 radius: 50,
-                                backgroundColor: AppColors.primary,
-                                child: Icon(
+                                backgroundColor: _isLoadingIcon
+                                    ? AppColors.primary
+                                    : Color(int.parse(
+                                    "0x${_profileIconData?['background'] ?? 'FF2E6F40'}")),
+                                child: _isLoadingIcon
+                                    ? const CircularProgressIndicator(color: Colors.white)
+                                    : _profileIconData != null
+                                    ? FaIcon(
+                                  _profileIconService.getIconData(
+                                    _profileIconData!['icon'],
+                                  ),
+                                  size: 40,
+                                  color: Colors.white,
+                                )
+                                    : const Icon(
                                   Icons.person,
                                   size: 50,
-                                  color: isDark ? Colors.black : Colors.white,
+                                  color: Colors.white,
                                 ),
                               ),
-                              Positioned(
-                                right: 0,
-                                bottom: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.primary,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.camera_alt,
-                                    size: 20,
-                                    color: isDark ? Colors.black : Colors.white,
-                                  ),
-                                ),
-                              ),
+                              // Remove the camera icon position since we don't allow uploads anymore
                             ],
                           ),
                         ),
@@ -181,8 +209,53 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                                 ),
                               ),
                               GestureDetector(
-                                onTap: () {
-                                  // TODO: Add support link
+                                onTap: () async {
+                                  final Uri emailUri = Uri(
+                                    scheme: 'mailto',
+                                    path: 'support.thecampp@gmail.com',
+                                    query: 'subject=Email Change Request',
+                                  );
+
+                                  try {
+                                    print('Attempting to launch email URL: ${emailUri.toString()}');
+
+                                    if (await canLaunchUrl(emailUri)) {
+                                      final launched = await launchUrl(emailUri);
+                                      print('URL launch result: $launched');
+
+                                      if (!launched) {
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Could not open email app. Please contact support.thecampp@gmail.com'),
+                                              backgroundColor: Colors.red,
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    } else {
+                                      // Show error if URL can't be launched
+                                      print('canLaunchUrl returned false for: ${emailUri.toString()}');
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Could not open email client. Please contact support.thecampp@gmail.com'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  } catch (e) {
+                                    print('Error launching URL: $e');
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Error opening email: $e. Please contact support.thecampp@gmail.com'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  }
                                 },
                                 child: Text(
                                   'contact support',
@@ -190,6 +263,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                                     fontSize: 12,
                                     color: Colors.red[400],
                                     decoration: TextDecoration.underline,
+                                    decorationColor: Colors.red[400],
                                   ),
                                 ),
                               ),
