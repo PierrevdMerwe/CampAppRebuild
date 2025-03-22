@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../auth/providers/user_provider.dart';
 import '../../auth/screens/account_linking_screen.dart';
 import '../../auth/services/account_linking_service.dart';
 import '../../core/config/theme/theme_model.dart';
 import '../../core/services/profile_icon_service.dart';
+import '../../settings/screens/contact_screen.dart';
 import '../../settings/screens/settings_screen.dart';
 import '../../shared/widgets/account_switch_card.dart';
 
@@ -102,6 +104,25 @@ class OwnerSlidingMenu extends StatelessWidget {
   */
   }
 
+  Future<void> _launchAboutWebsite(BuildContext context) async {
+    final Uri url = Uri.parse('https://thecampp.com/about');
+    try {
+      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not launch website')),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch website')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeModel>(
@@ -139,18 +160,22 @@ class OwnerSlidingMenu extends StatelessWidget {
                 const SizedBox(height: 24),
                 _MenuItem(
                   icon: Icons.info_outline,
-                  title: 'About Campp',
+                  title: 'About Camp App',
                   trailing: const Icon(Icons.open_in_new, size: 16),
                   onTap: () {
-                    // TODO: Add website URL
+                    _launchAboutWebsite(context);
                   },
                 ),
                 const SizedBox(height: 24),
                 _MenuItem(
                   icon: Icons.mail_outline,
-                  title: 'Contact',
+                  title: 'Contact Us',
                   onTap: () {
-                    // TODO: Add contact handling
+                    onClose();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ContactScreen()),
+                    );
                   },
                 ),
                 const SizedBox(height: 24),

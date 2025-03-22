@@ -1,5 +1,6 @@
 // Complete updated version of owner_profile_screen.dart
 
+import 'package:camp_app/src/settings/screens/help_support_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -94,9 +95,7 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
                       () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const ComingSoonScreen(
-                        title: 'Help & Support',
-                      ),
+                      builder: (context) => const HelpSupportScreen()
                     ),
                   ),
                 ),

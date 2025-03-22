@@ -1,6 +1,7 @@
 // Complete updated version of profile_screen.dart
 
 import 'package:camp_app/src/profile/screens/saved_campsites_screen.dart';
+import 'package:camp_app/src/settings/screens/help_support_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -86,7 +87,7 @@ class ProfileScreen extends StatelessWidget {
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const ComingSoonScreen(title: 'Help & Support'),
+                      builder: (context) => const HelpSupportScreen(),
                     ),
                   ),
                 ),

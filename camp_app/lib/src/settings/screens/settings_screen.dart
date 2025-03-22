@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../core/config/theme/theme_model.dart';
 import '../../home/widgets/social_footer.dart';
-import '../../shared/screens/coming_soon_screen.dart';
+import '../screens/help_support_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -97,10 +98,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _buildSection(
                       'Display',
                       [
-                        SwitchListTile(
+                        ListTile(
                           title: Row(
                             children: [
-                              const Icon(Icons.dark_mode, color: Color(0xff2e6f40)),
+                              const FaIcon(FontAwesomeIcons.moon,
+                                  color: Color(0xff2e6f40), size: 20),
                               const SizedBox(width: 10),
                               Text(
                                 'Dark Mode',
@@ -109,16 +111,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   color: isDark ? Colors.white : Colors.black,
                                 ),
                               ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xff2e6f40)
+                                      .withValues(alpha: .1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'Coming soon',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 12,
+                                    color: const Color(0xff2e6f40),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
-                          value: themeModel.isDark,
-                          onChanged: (bool value) {
-                            themeModel.isDark = value;
-                          },
-                          activeColor: Colors.white,
-                          activeTrackColor: const Color(0xff2e6f40),
-                          inactiveTrackColor: Colors.grey,
-                          inactiveThumbColor: Colors.white,
+                          trailing: Switch(
+                            value: false,
+                            onChanged: null,
+                            // Disabled
+                            activeColor: Colors.white,
+                            activeTrackColor: const Color(0xff2e6f40),
+                            inactiveTrackColor:
+                                Colors.grey.withValues(alpha: .5),
+                            inactiveThumbColor: Colors.white,
+                          ),
                         ),
                       ],
                       isDark: isDark,
@@ -130,7 +152,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         SwitchListTile(
                           title: Row(
                             children: [
-                              const Icon(Icons.location_on, color: Color(0xff2e6f40)),
+                              const FaIcon(FontAwesomeIcons.locationDot,
+                                  color: Color(0xff2e6f40), size: 20),
                               const SizedBox(width: 10),
                               Text(
                                 'Location permission',
@@ -148,7 +171,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           inactiveThumbColor: Colors.white,
                           onChanged: (value) async {
                             if (value) {
-                              await _handlePermission(Permission.locationWhenInUse, 'location');
+                              await _handlePermission(
+                                  Permission.locationWhenInUse, 'location');
                             } else {
                               openAppSettings();
                             }
@@ -157,7 +181,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         SwitchListTile(
                           title: Row(
                             children: [
-                              const Icon(Icons.photo_library, color: Color(0xff2e6f40)),
+                              const FaIcon(FontAwesomeIcons.images,
+                                  color: Color(0xff2e6f40), size: 20),
                               const SizedBox(width: 10),
                               Text(
                                 'Photo gallery permission',
@@ -175,7 +200,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           inactiveThumbColor: Colors.white,
                           onChanged: (value) async {
                             if (value) {
-                              await _handlePermission(Permission.photos, 'photos');
+                              await _handlePermission(
+                                  Permission.photos, 'photos');
                             } else {
                               openAppSettings();
                             }
@@ -184,7 +210,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         SwitchListTile(
                           title: Row(
                             children: [
-                              const Icon(Icons.notifications, color: Color(0xff2e6f40)),
+                              const FaIcon(FontAwesomeIcons.bell,
+                                  color: Color(0xff2e6f40), size: 20),
                               const SizedBox(width: 10),
                               Text(
                                 'Notifications permission',
@@ -202,7 +229,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           inactiveThumbColor: Colors.white,
                           onChanged: (value) async {
                             if (value) {
-                              await _handlePermission(Permission.notification, 'notifications');
+                              await _handlePermission(
+                                  Permission.notification, 'notifications');
                             } else {
                               openAppSettings();
                             }
@@ -216,6 +244,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'App',
                       [
                         ListTile(
+                          leading: const FaIcon(FontAwesomeIcons.code,
+                              color: Color(0xff2e6f40), size: 20),
                           title: Text(
                             'Version',
                             style: GoogleFonts.montserrat(
@@ -236,18 +266,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xff2e6f40),
+                  ),
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const ComingSoonScreen(title: 'Help & Support'),
+                        builder: (context) => const HelpSupportScreen(),
                       ),
                     );
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.help_outline, color: Color(0xff2e6f40)),
+                      const FaIcon(FontAwesomeIcons.circleQuestion,
+                          color: Color(0xff2e6f40), size: 20),
                       const SizedBox(width: 8),
                       Text(
                         'Help & Support',
@@ -269,7 +303,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildSection(String title, List<Widget> children, {required bool isDark}) {
+  Widget _buildSection(String title, List<Widget> children,
+      {required bool isDark}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
