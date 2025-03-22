@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../auth/providers/user_provider.dart';
 import '../../core/config/theme/theme_model.dart';
 import '../widgets/dashboard_section_card.dart';
 import '../widgets/owner_sliding_menu.dart';
 import './campsite_info_screen.dart';
-import './bookings_screen.dart';
 import './analytics_screen.dart';
 
 class OwnerDashboardScreen extends StatefulWidget {
@@ -25,6 +25,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen>
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   bool _hasCampsites = false;
   bool _isLoading = true;
+  List<String> _campsiteIds = [];
+  Map<String, dynamic> _analyticsData = {};
 
   @override
   void initState() {
@@ -53,6 +55,12 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen>
           final data = doc.docs.first.data();
           final ownedSites = data['owned_sites'] as List?;
           print('Found owned_sites: $ownedSites'); // Debug log
+
+          if (ownedSites != null && ownedSites.isNotEmpty) {
+            // Convert to List<String> and fetch analytics data
+            _campsiteIds = List<String>.from(ownedSites.map((site) => site.toString()));
+            await _fetchAnalyticsData();
+          }
 
           if (mounted) {
             setState(() {
@@ -85,6 +93,82 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen>
         });
       }
     }
+  }
+
+  Future<void> _fetchAnalyticsData() async {
+    try {
+      Map<String, dynamic> analyticsData = {
+        'totalViews': 0,
+        'monthlyViews': {},
+        'currentMonthViews': 0,
+        'favorites': 0,
+        'comments': 0,
+      };
+
+      // Get current month/year for filtering
+      final now = DateTime.now();
+      final currentMonthYear = '${_getMonthName(now.month).toLowerCase()}_${now.year}';
+
+      for (String campsiteId in _campsiteIds) {
+        final docSnapshot = await _firestore.collection('sites').doc(campsiteId).get();
+
+        if (docSnapshot.exists) {
+          final data = docSnapshot.data()!;
+          // No longer tracking provinces and tags for the overview
+
+          // Aggregate total views
+          if (data['total_views'] != null) {
+            analyticsData['totalViews'] += data['total_views'] as int;
+          }
+
+          // Process monthly views
+          if (data['views'] != null && data['views'] is Map) {
+            final viewsData = Map<String, dynamic>.from(data['views']);
+
+            // Add to monthly totals
+            viewsData.forEach((month, count) {
+              if (!analyticsData['monthlyViews'].containsKey(month)) {
+                analyticsData['monthlyViews'][month] = 0;
+              }
+              analyticsData['monthlyViews'][month] += count as int;
+
+              // Track current month views
+              if (month == currentMonthYear) {
+                analyticsData['currentMonthViews'] += count;
+              }
+            });
+          }
+
+          // Count favorites
+          if (data['total_favorites'] != null) {
+            analyticsData['favorites'] += data['total_favorites'] as int;
+          }
+
+          // Count comments
+          if (data['comments'] != null && data['comments'] is List) {
+            analyticsData['comments'] += (data['comments'] as List).length;
+          }
+        }
+      }
+
+      // No longer need to convert province and tag sets
+
+      if (mounted) {
+        setState(() {
+          _analyticsData = analyticsData;
+        });
+      }
+    } catch (e) {
+      print('Error fetching analytics data: $e');
+    }
+  }
+
+  String _getMonthName(int month) {
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return months[month - 1];
   }
 
   void _toggleMenu() {
@@ -181,7 +265,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen>
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Please click the "+" icon below to begin the process of adding your campsite. Once completed, you\'ll be able to manage bookings, view analytics, and handle your listings with ease.',
+                      'Please click the "+" icon below to begin the process of adding your campsite. Once completed, you\'ll be able to view analytics and handle your listings with ease.',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.montserrat(
                         fontSize: 16,
@@ -200,7 +284,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen>
                           borderRadius: BorderRadius.circular(15),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.grey.withOpacity(0.1),
+                              color: Colors.grey.withValues(alpha: .1),
                               spreadRadius: 2,
                               blurRadius: 5,
                               offset: const Offset(0, 3),
@@ -213,7 +297,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen>
                               width: 64,
                               height: 64,
                               decoration: BoxDecoration(
-                                color: const Color(0xff2e6f40).withOpacity(0.1),
+                                color: const Color(0xff2e6f40).withValues(alpha: .1),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -250,10 +334,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen>
       controller: _scrollController,
       slivers: <Widget>[
         SliverAppBar(
-          expandedHeight: MediaQuery
-              .of(context)
-              .size
-              .height * 0.25,
+          expandedHeight: MediaQuery.of(context).size.height * 0.25,
           pinned: true,
           backgroundColor: const Color(0xffF5F8F5),
           automaticallyImplyLeading: false,
@@ -301,9 +382,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen>
                 const SizedBox(height: 20),
                 _buildCampsiteInfoCard(),
                 const SizedBox(height: 20),
-                _buildBookingsCard(),
-                const SizedBox(height: 20),
-                _buildAnalyticsCard(),
+                _buildViewsEngagementCard(),
                 const SizedBox(height: 20),
               ],
             ),
@@ -329,10 +408,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen>
                     transform: Matrix4.identity()
                       ..setEntry(3, 2, 0.001)
                       ..rotateY(-0.3 * _animationController.value)
-                      ..translate(-MediaQuery
-                          .of(context)
-                          .size
-                          .width * 0.4 * _animationController.value)
+                      ..translate(-MediaQuery.of(context).size.width * 0.4 * _animationController.value)
                       ..scale(1 - 0.2 * _animationController.value),
                     child: child,
                   );
@@ -358,10 +434,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen>
                   builder: (context, child) {
                     return Transform.translate(
                       offset: Offset(
-                        MediaQuery
-                            .of(context)
-                            .size
-                            .width * 0.6 * (1 - _animationController.value),
+                        MediaQuery.of(context).size.width * 0.6 * (1 - _animationController.value),
                         0,
                       ),
                       child: child,
@@ -386,19 +459,19 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen>
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             InfoItem(
-              icon: Icons.visibility,
-              label: 'Views',
-              value: '245',
+              icon: FontAwesomeIcons.eye,
+              label: 'Total Views',
+              value: '${_analyticsData['totalViews'] ?? 0}',
             ),
             InfoItem(
-              icon: Icons.calendar_today,
-              label: 'Bookings',
-              value: '12',
+              icon: FontAwesomeIcons.heart,
+              label: 'Favorites',
+              value: '${_analyticsData['favorites'] ?? 0}',
             ),
             InfoItem(
-              icon: Icons.star,
-              label: 'Rating',
-              value: '4.8',
+              icon: FontAwesomeIcons.comment,
+              label: 'Reviews',
+              value: '${_analyticsData['comments'] ?? 0}',
             ),
           ],
         ),
@@ -407,74 +480,63 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen>
   }
 
   Widget _buildCampsiteInfoCard() {
-    return DashboardSectionCard(
-      title: 'Campsite Information',
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const CampsiteInfoScreen()),
-        );
-      },
-      children: [
-        InfoItem(
-          icon: Icons.location_on,
-          label: 'Location',
-          value: 'Cape Town, Western Cape',
-        ),
-        const SizedBox(height: 12),
-        InfoItem(
-          icon: Icons.emoji_nature,
-          label: 'Amenities',
-          value: '8 Available',
-        ),
-        const SizedBox(height: 12),
-        InfoItem(
-          icon: Icons.photo_library,
-          label: 'Gallery',
-          value: '12 Photos',
-        ),
-      ],
-      trailing: const Icon(
-        Icons.arrow_forward_ios,
-        size: 16,
-        color: Colors.grey,
-      ),
-    );
-  }
+    return FutureBuilder<QuerySnapshot>(
+      future: _firestore.collection('sites')
+          .where(FieldPath.documentId, whereIn: _campsiteIds.isEmpty ? ['none'] : _campsiteIds)
+          .limit(1)
+          .get(),
+      builder: (context, snapshot) {
+        // Default values
+        String campsiteName = 'Not available';
+        String price = '0';
+        String telephone = 'Not available';
 
-  Widget _buildBookingsCard() {
-    return DashboardSectionCard(
-      title: 'Recent Bookings',
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const BookingsScreen()),
+        // If we have data, update the values
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasData &&
+            snapshot.data!.docs.isNotEmpty) {
+          final campsite = snapshot.data!.docs[0];
+          final data = campsite.data() as Map<String, dynamic>;
+
+          campsiteName = data['name'] ?? 'Not available';
+          price = data['price']?.toString() ?? '0';
+          telephone = data['telephone'] ?? 'Not available';
+        }
+
+        return DashboardSectionCard(
+          title: 'Campsite Information',
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const CampsiteInfoScreen()),
+            );
+          },
+          trailing: const Icon(
+            Icons.arrow_forward_ios,
+            size: 16,
+            color: Colors.grey,
+          ),
+          children: [
+            InfoItem(
+              icon: FontAwesomeIcons.campground,
+              label: 'Name',
+              value: campsiteName,
+            ),
+            const SizedBox(height: 12),
+            InfoItem(
+              icon: FontAwesomeIcons.moneyBill,
+              label: 'Price',
+              value: 'R$price',
+            ),
+            const SizedBox(height: 12),
+            InfoItem(
+              icon: FontAwesomeIcons.phone,
+              label: 'Telephone',
+              value: telephone,
+            ),
+          ],
         );
       },
-      children: [
-        InfoItem(
-          icon: Icons.event,
-          label: 'Pending',
-          value: '3 Bookings',
-        ),
-        const SizedBox(height: 12),
-        InfoItem(
-          icon: Icons.event_available,
-          label: 'Upcoming',
-          value: '5 Bookings',
-        ),
-        const SizedBox(height: 12),
-        InfoItem(
-          icon: Icons.history,
-          label: 'This Month',
-          value: '15 Total',
-        ),
-      ],
-      trailing: const Icon(
-        Icons.arrow_forward_ios,
-        size: 16,
-        color: Colors.grey,
-      ),
     );
   }
 
@@ -487,30 +549,85 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen>
           MaterialPageRoute(builder: (context) => const AnalyticsScreen()),
         );
       },
-      children: [
-        InfoItem(
-          icon: Icons.trending_up,
-          label: 'Revenue',
-          value: 'R 25,480',
-        ),
-        const SizedBox(height: 12),
-        InfoItem(
-          icon: Icons.people,
-          label: 'Total Visitors',
-          value: '156 This Month',
-        ),
-        const SizedBox(height: 12),
-        InfoItem(
-          icon: Icons.assessment,
-          label: 'Occupancy Rate',
-          value: '78%',
-        ),
-      ],
       trailing: const Icon(
         Icons.arrow_forward_ios,
         size: 16,
         color: Colors.grey,
       ),
+      children: [
+        InfoItem(
+          icon: Icons.trending_up,
+          label: 'Page Views',
+          value: '${_analyticsData['totalViews'] ?? 0} Total',
+        ),
+        const SizedBox(height: 12),
+        InfoItem(
+          icon: Icons.favorite,
+          label: 'Favorited',
+          value: '${_analyticsData['favorites'] ?? 0} Saves',
+        ),
+        const SizedBox(height: 12),
+        InfoItem(
+          icon: Icons.star,
+          label: 'Review Activity',
+          value: '${_analyticsData['comments'] ?? 0} Reviews',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildViewsEngagementCard() {
+    // Get current and previous month
+    final now = DateTime.now();
+    final currentMonth = _getMonthName(now.month);
+    final previousMonth = _getMonthName(now.month > 1 ? now.month - 1 : 12);
+
+    // Calculate current and previous month views
+    final currentMonthKey = '${currentMonth.toLowerCase()}_${now.year}';
+    final previousMonthKey = '${previousMonth.toLowerCase()}_${now.month > 1 ? now.year : now.year - 1}';
+
+    final currentMonthViews = _analyticsData['monthlyViews']?[currentMonthKey] ?? 0;
+    final previousMonthViews = _analyticsData['monthlyViews']?[previousMonthKey] ?? 0;
+
+    // Calculate percentage change
+    int percentChange = 0;
+    if (previousMonthViews > 0) {
+      percentChange = ((currentMonthViews - previousMonthViews) / previousMonthViews * 100).round();
+    }
+
+    return DashboardSectionCard(
+      title: 'Views & Engagement',
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AnalyticsScreen()),
+        );
+      },
+      trailing: const Icon(
+        Icons.arrow_forward_ios,
+        size: 16,
+        color: Colors.grey,
+      ),
+      children: [
+        InfoItem(
+          icon: FontAwesomeIcons.calendarDay,
+          label: '$currentMonth Views',
+          value: '$currentMonthViews',
+        ),
+        const SizedBox(height: 12),
+        InfoItem(
+          icon: FontAwesomeIcons.arrowsLeftRight,
+          label: 'Change from $previousMonth',
+          value: percentChange >= 0 ? '+$percentChange%' : '$percentChange%',
+          iconColor: percentChange >= 0 ? Colors.green : Colors.red,
+        ),
+        const SizedBox(height: 12),
+        const InfoItem(
+          icon: FontAwesomeIcons.chartLine,
+          label: 'View Analytics',
+          value: 'Click for details',
+        ),
+      ],
     );
   }
 }
