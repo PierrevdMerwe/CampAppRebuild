@@ -33,6 +33,28 @@ class CampsiteModel {
   factory CampsiteModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
 
+    // Handle both old (int) and new (map) formats for views
+    int viewsCount = 0;
+    if (data['views'] != null) {
+      if (data['views'] is int) {
+        viewsCount = data['views'];
+      } else if (data['views'] is Map) {
+        // If we have total_views field, use that
+        if (data['total_views'] != null && data['total_views'] is int) {
+          viewsCount = data['total_views'];
+        } else {
+          // Otherwise try to sum up the values in the map
+          try {
+            final viewsMap = data['views'] as Map<String, dynamic>;
+            viewsCount = viewsMap.values.fold(0,
+                    (sum, value) => sum + (value is int ? value : 0));
+          } catch (e) {
+            print('Error calculating views: $e');
+          }
+        }
+      }
+    }
+
     return CampsiteModel(
       id: doc.id,
       name: data['name'] ?? '',
@@ -45,7 +67,7 @@ class CampsiteModel {
       province: data['province'] ?? '',
       fallUnder: List<String>.from(data['fall_under'] ?? []),
       signal: data['signal'] ?? '',
-      views: data['views'] ?? 0,
+      views: viewsCount, // Use the calculated views count
     );
   }
 
