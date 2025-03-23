@@ -323,6 +323,7 @@ class _CampsiteInfoScreenState extends State<CampsiteInfoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white, // Ensuring white background
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -498,7 +499,7 @@ class _CampsiteInfoScreenState extends State<CampsiteInfoScreen> {
 
                 const SizedBox(height: 24),
 
-                // Edit Button (instead of ratings/comments)
+                // Edit Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -587,10 +588,6 @@ class _CampsiteInfoScreenState extends State<CampsiteInfoScreen> {
                     ],
                   ),
                 ),
-
-                const SizedBox(height: 24),
-
-                // Removed Listing Performance section
               ],
             ),
           ),
