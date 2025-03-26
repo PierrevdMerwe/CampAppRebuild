@@ -173,8 +173,10 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> with SingleTi
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text('Campsite Details', style: GoogleFonts.montserrat()),
+        backgroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         child: FutureBuilder<List<String>>(

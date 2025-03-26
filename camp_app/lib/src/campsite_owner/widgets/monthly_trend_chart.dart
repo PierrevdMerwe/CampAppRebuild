@@ -109,9 +109,22 @@ class MonthlyTrendChart extends StatelessWidget {
     }
 
     return LineChartData(
-      // Remove grid for a more minimal look
-      gridData: const FlGridData(
-        show: false,
+      gridData: FlGridData(
+        show: true,
+        drawVerticalLine: true,  // Show vertical grid lines
+        drawHorizontalLine: true, // Show horizontal grid lines
+        getDrawingHorizontalLine: (value) {
+          return FlLine(
+            color: Colors.grey[300]!,
+            strokeWidth: 1,
+          );
+        },
+        getDrawingVerticalLine: (value) {
+          return FlLine(
+            color: Colors.grey[300]!,
+            strokeWidth: 1,
+          );
+        },
       ),
       titlesData: FlTitlesData(
         show: true,
@@ -209,13 +222,14 @@ class MonthlyTrendChart extends StatelessWidget {
         touchTooltipData: LineTouchTooltipData(
           // Improved tooltip styling
           tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          tooltipMargin: 8,
+          fitInsideHorizontally: true,
+          fitInsideVertically: true,
+          getTooltipColor: (touchedSpot) => Colors.white,
           tooltipBorder: const BorderSide(
             color: Color(0xff2e6f40),
             width: 1,
           ),
-          tooltipMargin: 8,
-          fitInsideHorizontally: true,
-          fitInsideVertically: true,
           getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
             return touchedBarSpots.map((barSpot) {
               final index = barSpot.x.toInt();

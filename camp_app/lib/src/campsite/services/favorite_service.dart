@@ -71,7 +71,11 @@ class FavoriteService {
 
       // Run as a transaction to ensure atomicity
       await _firestore.runTransaction((transaction) async {
-        // 1. Update the user's favorite list
+        // First, do all the reads
+        final campsiteRef = _firestore.collection('sites').doc(campsiteId);
+        final campsiteDoc = await transaction.get(campsiteRef);
+
+        // Now perform all writes
         if (isFavorite) {
           // Remove the campsite from favorites
           savedCampsites.remove(campsiteId);
@@ -80,41 +84,7 @@ class FavoriteService {
           });
           _logDebug('Removed campsite $campsiteId from favorites');
 
-          // 2. Update the campsite's favorites count (decrement for the current month)
-          final campsiteRef = _firestore.collection('sites').doc(campsiteId);
-          final campsiteDoc = await transaction.get(campsiteRef);
-
-          if (campsiteDoc.exists) {
-            // Get current favorites data
-            Map<String, dynamic> favoritesData = {};
-            if (campsiteDoc.data()!.containsKey('favorites') &&
-                campsiteDoc.data()!['favorites'] != null) {
-              favoritesData = Map<String, dynamic>.from(campsiteDoc.data()!['favorites']);
-            }
-
-            // Get current user IDs who favorited
-            List<String> favoritedBy = [];
-            if (campsiteDoc.data()!.containsKey('favorited_by') &&
-                campsiteDoc.data()!['favorited_by'] != null) {
-              favoritedBy = List<String>.from(campsiteDoc.data()!['favorited_by']);
-            }
-
-            // Update the counts
-            final currentMonthFavorites = favoritesData[monthYearKey] ?? 0;
-            if (currentMonthFavorites > 0) {
-              favoritesData[monthYearKey] = currentMonthFavorites - 1;
-            }
-
-            // Remove user from favorited_by list
-            favoritedBy.remove(currentUser.uid);
-
-            // Update the campsite document
-            transaction.update(campsiteRef, {
-              'favorites': favoritesData,
-              'favorited_by': favoritedBy,
-              'total_favorites': FieldValue.increment(-1),
-            });
-          }
+          // We don't decrement total_favorites as per requirements
         } else {
           // Add the campsite to favorites
           savedCampsites.add(campsiteId);
@@ -123,10 +93,6 @@ class FavoriteService {
           });
           _logDebug('Added campsite $campsiteId to favorites');
 
-          // 2. Update the campsite's favorites count (increment for the current month)
-          final campsiteRef = _firestore.collection('sites').doc(campsiteId);
-          final campsiteDoc = await transaction.get(campsiteRef);
-
           if (campsiteDoc.exists) {
             // Get current favorites data
             Map<String, dynamic> favoritesData = {};
@@ -135,27 +101,14 @@ class FavoriteService {
               favoritesData = Map<String, dynamic>.from(campsiteDoc.data()!['favorites']);
             }
 
-            // Get current user IDs who favorited
-            List<String> favoritedBy = [];
-            if (campsiteDoc.data()!.containsKey('favorited_by') &&
-                campsiteDoc.data()!['favorited_by'] != null) {
-              favoritedBy = List<String>.from(campsiteDoc.data()!['favorited_by']);
-            }
-
             // Update the counts
             final currentMonthFavorites = favoritesData[monthYearKey] ?? 0;
             favoritesData[monthYearKey] = currentMonthFavorites + 1;
 
-            // Add user to favorited_by list if not already there
-            if (!favoritedBy.contains(currentUser.uid)) {
-              favoritedBy.add(currentUser.uid);
-            }
-
             // Update the campsite document
             transaction.update(campsiteRef, {
               'favorites': favoritesData,
-              'favorited_by': favoritedBy,
-              'total_favorites': FieldValue.increment(1),
+              'total_favorites': FieldValue.increment(1), // Always increment the total favorites
             });
           }
         }

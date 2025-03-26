@@ -245,7 +245,7 @@ class ReviewsSection extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFEEFFF5), // Light green background for reviews
+        color: Colors.grey[100], // Light green background for reviews
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(

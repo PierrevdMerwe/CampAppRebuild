@@ -590,9 +590,12 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen>
     final previousMonthViews = _analyticsData['monthlyViews']?[previousMonthKey] ?? 0;
 
     // Calculate percentage change
-    int percentChange = 0;
+    int? percentChange = 0;
     if (previousMonthViews > 0) {
       percentChange = ((currentMonthViews - previousMonthViews) / previousMonthViews * 100).round();
+    } else if (currentMonthViews > 0) {
+      // If previous month was 0 but current month has views, that's a 100% increase for each view
+      percentChange = (100 * currentMonthViews) as int?;
     }
 
     return DashboardSectionCard(
@@ -618,7 +621,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen>
         InfoItem(
           icon: FontAwesomeIcons.arrowsLeftRight,
           label: 'Change from $previousMonth',
-          value: percentChange >= 0 ? '+$percentChange%' : '$percentChange%',
+          value: percentChange! >= 0 ? '+$percentChange%' : '$percentChange%',
           iconColor: percentChange >= 0 ? Colors.green : Colors.red,
         ),
         const SizedBox(height: 12),

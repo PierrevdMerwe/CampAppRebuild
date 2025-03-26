@@ -112,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           expandedHeight: MediaQuery.of(context).size.height * 0.25,
                           pinned: true,
                           elevation: 0,
-                          backgroundColor: const Color(0xffF5F8F5),
+                          backgroundColor: Colors.white,
                           automaticallyImplyLeading: false,
                           actions: [
                             Padding(
