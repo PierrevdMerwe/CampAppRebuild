@@ -391,45 +391,14 @@ class _SearchScreenState extends State<SearchScreen> {
                                 Widget buildCategoryFacilityButtons() {
                                   return Wrap(
                                     spacing: 0.5,
-                                    // gap between adjacent buttons
                                     runSpacing: 2.0,
-                                    // gap between lines
-                                    children:
-                                        categories.keys.map((String category) {
-                                      bool isSelected =
-                                          selectedCategories[category] ??
-                                              false; // Provide a default value
-                                      return ElevatedButton.icon(
-                                        icon: Icon(categories[category],
-                                            size: 18.0,
-                                            color: isSelected
-                                                ? Colors.white
-                                                : const Color(0xff2e6f40)),
-                                        label: Text(category,
-                                            style: GoogleFonts.montserrat(
-                                                color: isSelected
-                                                    ? Colors.white
-                                                    : const Color(0xff2e6f40))),
-                                        style: ElevatedButton.styleFrom(
-                                          foregroundColor: isSelected
-                                              ? Colors.white
-                                              : const Color(0xff2e6f40),
-                                          backgroundColor: isSelected
-                                              ? const Color(0xff2e6f40)
-                                              : Colors.grey[200],
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(25),
-                                          ),
-                                        ),
-                                        onPressed: () {
-                                          setState(() {
-                                            selectedCategories[category] =
-                                                !isSelected;
-                                          });
-                                        },
-                                      );
-                                    }).toList(),
+                                    children: [
+                                      _buildFilterButton('Swimming Pool', Icons.pool),
+                                      _buildFilterButton('Hiking', Icons.hiking),
+                                      _buildFilterButton('Fishing', Icons.water),
+                                      _buildFilterButton('Braai Place', Icons.local_fire_department),
+                                      _buildFilterButton('Pet Friendly', Icons.pets),
+                                    ],
                                   );
                                 }
 
@@ -849,26 +818,10 @@ class _SearchScreenState extends State<SearchScreen> {
                                               title: Text('No Pets Allowed'),
                                             ),
                                           ListTile(
-                                            contentPadding:
-                                                const EdgeInsets.only(left: 4),
-                                            leading: const Icon(
-                                                Icons.check_circle_outline,
-                                                color: Color(0xff2e6f40)),
+                                            contentPadding: const EdgeInsets.only(left: 4),
+                                            leading: const Icon(Icons.signal_cellular_alt, color: Color(0xff2e6f40)),
                                             title: Text(
-                                              snapshot.data![index]['tags']
-                                                      .contains(
-                                                          'Only Campsites')
-                                                  ? 'Only Campsites'
-                                                  : snapshot.data![index]
-                                                                  ['tags']
-                                                              .contains(
-                                                                  'Self Catering') &&
-                                                          snapshot.data![index]
-                                                                  ['tags']
-                                                              .contains(
-                                                                  'Campsites')
-                                                      ? 'Campsites & Self Catering'
-                                                      : 'Self Catering',
+                                              snapshot.data![index]['signal'] ?? 'No signal information',
                                               style: GoogleFonts.montserrat(),
                                             ),
                                           ),
@@ -890,6 +843,26 @@ class _SearchScreenState extends State<SearchScreen> {
             ],
           );
         }
+      },
+    );
+  }
+
+  Widget _buildFilterButton(String category, IconData icon) {
+    bool isSelected = selectedCategories[category] ?? false;
+    return ElevatedButton.icon(
+      icon: Icon(icon, size: 18.0, color: isSelected ? Colors.white : const Color(0xff2e6f40)),
+      label: Text(category, style: GoogleFonts.montserrat(color: isSelected ? Colors.white : const Color(0xff2e6f40))),
+      style: ElevatedButton.styleFrom(
+        foregroundColor: isSelected ? Colors.white : const Color(0xff2e6f40),
+        backgroundColor: isSelected ? const Color(0xff2e6f40) : Colors.grey[200],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(25),
+        ),
+      ),
+      onPressed: () {
+        setState(() {
+          selectedCategories[category] = !isSelected;
+        });
       },
     );
   }
@@ -993,8 +966,8 @@ class _SearchScreenState extends State<SearchScreen> {
       'Pets With Arrangements',
       'Campsites'
     ];
-    final includedTags =
-        tags.where((tag) => !excludedTags.contains(tag)).toList();
+
+    final includedTags = tags.where((tag) => !excludedTags.contains(tag)).toList();
     final tagIcons = {
       'Braai Place': Icons.local_fire_department,
       'Swimming Pool': Icons.pool,
@@ -1058,67 +1031,7 @@ class _SearchScreenState extends State<SearchScreen> {
               if (includedTags.length > 1)
                 InkWell(
                   onTap: () {
-                    if (includedTags.length > 1) {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: Text('Other Tags',
-                                style: GoogleFonts.montserrat()),
-                            content: SingleChildScrollView(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: includedTags.skip(1).map((tag) {
-                                  return ListTile(
-                                    leading: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      // This will make the Row as small as possible
-                                      children: [
-                                        Icon(tagIcons[tag] ?? Icons.tag),
-                                        // Use the corresponding icon
-                                        const SizedBox(width: 5),
-                                        // Adjust the space as needed
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                            setState(() {
-                                              widget.query =
-                                                  tag; // Update the query
-                                              futureResults = performSearch(
-                                                widget.query,
-                                                locationFilter,
-                                                categoryFilter as List<String>?,
-                                                receptionFilter,
-                                              ); // Perform a new search
-                                            });
-                                          },
-                                          child: Text(tag,
-                                              style: GoogleFonts.montserrat(
-                                                  fontWeight: FontWeight.bold,
-                                                  color:
-                                                      const Color(0xff2e6f40))),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                                child: Text('Close',
-                                    style: GoogleFonts.montserrat(
-                                        fontWeight: FontWeight.bold,
-                                        color: const Color(0xff2e6f40))),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    }
+                    _showAllTagsDialog(includedTags, tagIcons);
                   },
                   child: Container(
                     padding: const EdgeInsets.all(8.0),
@@ -1149,6 +1062,72 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showAllTagsDialog(List<dynamic> tags, Map<String, IconData> tagIcons) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text(
+              'All Amenities',
+              style: GoogleFonts.montserrat(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              )
+          ),
+          content: SingleChildScrollView(
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: tags.map((tag) {
+                IconData icon = tagIcons[tag] ?? Icons.tag;
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xff2e6f40).withValues(alpha: .1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color(0xff2e6f40).withValues(alpha: .2),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(icon, size: 18, color: const Color(0xff2e6f40)),
+                      const SizedBox(width: 6),
+                      Text(
+                        tag,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 14,
+                          color: const Color(0xff2e6f40),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                overlayColor: const Color(0xff2e6f40).withValues(alpha: .1),
+              ),
+              child: Text(
+                  'Close',
+                  style: GoogleFonts.montserrat(
+                    color: const Color(0xff2e6f40),
+                    fontWeight: FontWeight.bold,
+                  )
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

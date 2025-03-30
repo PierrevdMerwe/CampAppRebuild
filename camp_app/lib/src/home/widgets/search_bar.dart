@@ -72,6 +72,16 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
                         borderRadius: BorderRadius.circular(15.0),
                         borderSide: const BorderSide(color: Color(0xff2e6f40)),
                       ),
+                      suffixIcon: _hasText
+                          ? IconButton(
+                        icon: const Icon(Icons.clear, color: Colors.grey),
+                        onPressed: () {
+                          setState(() {
+                            _searchController.clear();
+                          });
+                        },
+                      )
+                          : null,
                     ),
                   ),
                 ),

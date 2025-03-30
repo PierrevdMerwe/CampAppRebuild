@@ -75,14 +75,15 @@ class _CommentItemState extends State<CommentItem> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
+      color: Colors.grey[100],
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with profile icon, username, and rating
+            // Header with profile icon, username, and date in top right
             Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Profile icon
                 Container(
@@ -132,23 +133,20 @@ class _CommentItemState extends State<CommentItem> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          StarRating(
-                            rating: widget.comment['rating'] ?? 0,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _formatTimestamp(widget.comment['createdAt']),
-                            style: GoogleFonts.montserrat(
-                              color: Colors.grey[600],
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
+                      StarRating(
+                        rating: widget.comment['rating'] ?? 0,
+                        size: 16,
                       ),
                     ],
+                  ),
+                ),
+
+                // Date moved to top right
+                Text(
+                  _formatTimestamp(widget.comment['createdAt']),
+                  style: GoogleFonts.montserrat(
+                    color: Colors.grey[600],
+                    fontSize: 12,
                   ),
                 ),
               ],

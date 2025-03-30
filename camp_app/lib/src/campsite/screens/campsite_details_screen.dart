@@ -2,10 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../shared/widgets/cached_firebase_image.dart';
 import '../../shared/widgets/star_rating_widget.dart';
 import '../services/favorite_service.dart';
@@ -177,6 +179,17 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> with SingleTi
       appBar: AppBar(
         title: Text('Campsite Details', style: GoogleFonts.montserrat()),
         backgroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share, color: Colors.red),
+            onPressed: () {
+              // Will be implemented later
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Sharing will be implemented soon')),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: FutureBuilder<List<String>>(
@@ -476,7 +489,7 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> with SingleTi
                               ),
                               const SizedBox(height: 16),
                               _buildDetailRow(
-                                Icons.attach_money,
+                                FontAwesomeIcons.moneyBill,
                                 'Rates From',
                                 'R${widget.campsite['price']}',
                               ),
@@ -485,6 +498,7 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> with SingleTi
                                 Icons.phone,
                                 'Contact',
                                 widget.campsite['telephone'] ?? 'Not provided',
+                                isPhone: true,
                               ),
                               const SizedBox(height: 12),
                               _buildDetailRow(
@@ -504,7 +518,7 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> with SingleTi
                       ],
                     ),
                   ),
-
+                  _buildBookNowButton(),
                   // Comments Section
                   CommentSection(
                     campsiteId: widget.campsite.id,
@@ -521,7 +535,7 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> with SingleTi
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String label, String value) {
+  Widget _buildDetailRow(IconData icon, String label, String value, {bool isPhone = false}) {
     return Row(
       children: [
         Icon(icon, color: const Color(0xff2e6f40), size: 20),
@@ -536,7 +550,18 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> with SingleTi
                 fontSize: 14,
               ),
             ),
-            Text(
+            isPhone ? GestureDetector(
+              onTap: () => _launchPhone(value),
+              child: Text(
+                value,
+                style: GoogleFonts.montserrat(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: const Color(0xff2e6f40),
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ) : Text(
               value,
               style: GoogleFonts.montserrat(
                 fontWeight: FontWeight.bold,
@@ -549,6 +574,59 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> with SingleTi
     );
   }
 
+  void _launchPhone(String phoneNumber) async {
+    final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber.replaceAll(' ', ''));
+    if (await canLaunchUrl(phoneUri)) {
+      await launchUrl(phoneUri);
+    } else {
+      print('Could not launch $phoneUri');
+    }
+  }
+
+  Widget _buildBookNowButton() {
+    final bookLink = widget.campsite['book_link'];
+
+    if (bookLink == null || bookLink.isEmpty) {
+      return const SizedBox.shrink(); // Don't show button if no link
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          icon: const Icon(Icons.open_in_new, color: Colors.white),
+          label: Text(
+            'Book Now',
+            style: GoogleFonts.montserrat(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xff2e6f40),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          onPressed: () => _launchUrl(bookLink),
+        ),
+      ),
+    );
+  }
+
+  void _launchUrl(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not launch booking link')),
+      );
+    }
+  }
+
   Widget _buildTagRow(List<dynamic> tags) {
     final excludedTags = [
       'Self Catering',
@@ -557,8 +635,10 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> with SingleTi
       'Pets With Arrangements',
       'Campsites'
     ];
-    final includedTags =
-    tags.where((tag) => !excludedTags.contains(tag)).toList();
+
+    final includedTags = tags.where((tag) => !excludedTags.contains(tag)).toList();
+    const int maxVisibleTags = 3; // Maximum tags to show before using the +X button
+
     final tagIcons = {
       'Braai Place': Icons.local_fire_department,
       'Swimming Pool': Icons.pool,
@@ -573,30 +653,130 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> with SingleTi
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: includedTags.map((tag) {
-        final IconData icon = tagIcons[tag] ?? Icons.tag;
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: const Color(0xff2e6f40).withValues(alpha: .1),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 16, color: const Color(0xff2e6f40)),
-              const SizedBox(width: 4),
-              Text(
-                tag,
+      children: [
+        ...includedTags.take(maxVisibleTags).map((tag) {
+          final IconData icon = tagIcons[tag] ?? Icons.tag;
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xff2e6f40).withValues(alpha: .1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 16, color: const Color(0xff2e6f40)),
+                const SizedBox(width: 4),
+                Text(
+                  tag,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 14,
+                    color: const Color(0xff2e6f40),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+
+        // Add the +X button if there are more tags
+        if (includedTags.length > maxVisibleTags)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xff2e6f40).withValues(alpha: .1),
+              shape: BoxShape.circle,
+            ),
+            child: GestureDetector(
+              onTap: () => _showAllTags(includedTags),
+              child: Text(
+                '+${includedTags.length - maxVisibleTags}',
                 style: GoogleFonts.montserrat(
                   fontSize: 14,
                   color: const Color(0xff2e6f40),
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ],
+            ),
           ),
+      ],
+    );
+  }
+
+  void _showAllTags(List<dynamic> tags) {
+    final tagIcons = {
+      'Braai Place': Icons.local_fire_department,
+      'Swimming Pool': Icons.pool,
+      'Signal': Icons.signal_cellular_alt,
+      'Fishing': Icons.water,
+      'Hiking': Icons.hiking,
+      'Jacuzzi': Icons.bathtub,
+      'Glamping': Icons.house,
+      'Beach Camping': Icons.beach_access,
+    };
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text(
+              'All Amenities',
+              style: GoogleFonts.montserrat(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              )
+          ),
+          content: SingleChildScrollView(
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: tags.map((tag) {
+                IconData icon = tagIcons[tag] ?? Icons.tag;
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xff2e6f40).withValues(alpha: .1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color(0xff2e6f40).withValues(alpha: .2),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(icon, size: 18, color: const Color(0xff2e6f40)),
+                      const SizedBox(width: 6),
+                      Text(
+                        tag,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 14,
+                          color: const Color(0xff2e6f40),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                overlayColor: const Color(0xff2e6f40).withValues(alpha: .1),
+              ),
+              child: Text(
+                  'Close',
+                  style: GoogleFonts.montserrat(
+                    color: const Color(0xff2e6f40),
+                    fontWeight: FontWeight.bold,
+                  )
+              ),
+            ),
+          ],
         );
-      }).toList(),
+      },
     );
   }
 }
