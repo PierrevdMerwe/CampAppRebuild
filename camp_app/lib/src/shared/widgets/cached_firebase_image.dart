@@ -47,13 +47,19 @@ class _CachedFirebaseImageState extends State<CachedFirebaseImage> {
     _imageFuture = _getImage();
   }
 
+  // Update the _getImage method in _CachedFirebaseImageState class
   Future<File?> _getImage() async {
-    // First try to get from cache
-    final cachedFile = await _cacheService.getCachedImage(widget.firebaseUrl);
-    if (cachedFile != null) return cachedFile;
+    try {
+      // First try to get from cache
+      final cachedFile = await _cacheService.getCachedImage(widget.firebaseUrl);
+      if (cachedFile != null) return cachedFile;
 
-    // If not in cache, download and cache
-    return _cacheService.downloadAndCacheImage(widget.firebaseUrl);
+      // If not in cache, try to download and cache
+      return await _cacheService.downloadAndCacheImage(widget.firebaseUrl);
+    } catch (e) {
+      print('Error getting image: $e');
+      return null;
+    }
   }
 
   @override
@@ -65,9 +71,53 @@ class _CachedFirebaseImageState extends State<CachedFirebaseImage> {
           return widget.placeholder ?? const CircularProgressIndicator();
         }
 
-        if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
-          return widget.errorWidget ??
-              const Icon(Icons.error_outline, color: Colors.red);
+        if (snapshot.hasError) {
+          print('Image loading error: ${snapshot.error}');
+          try {
+            // Fallback to direct network image if caching fails
+            return Image.network(
+              widget.firebaseUrl,
+              width: widget.width,
+              height: widget.height,
+              fit: widget.fit,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return widget.placeholder ??
+                    const Center(child: CircularProgressIndicator());
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return widget.errorWidget ??
+                    const Icon(Icons.error_outline, color: Colors.red);
+              },
+            );
+          } catch (e) {
+            return widget.errorWidget ??
+                const Icon(Icons.broken_image, color: Colors.red);
+          }
+        }
+
+        if (!snapshot.hasData || snapshot.data == null) {
+          try {
+            // Fallback to direct network image if file is null
+            return Image.network(
+              widget.firebaseUrl,
+              width: widget.width,
+              height: widget.height,
+              fit: widget.fit,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return widget.placeholder ??
+                    const Center(child: CircularProgressIndicator());
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return widget.errorWidget ??
+                    const Icon(Icons.error_outline, color: Colors.red);
+              },
+            );
+          } catch (e) {
+            return widget.errorWidget ??
+                const Icon(Icons.broken_image, color: Colors.red);
+          }
         }
 
         return Image.file(
@@ -76,8 +126,9 @@ class _CachedFirebaseImageState extends State<CachedFirebaseImage> {
           height: widget.height,
           fit: widget.fit ?? BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
+            print('Error displaying cached image: $error');
             return widget.errorWidget ??
-                const Icon(Icons.error_outline, color: Colors.red);
+                const Icon(Icons.image_not_supported, color: Colors.red);
           },
         );
       },

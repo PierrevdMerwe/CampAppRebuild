@@ -80,30 +80,42 @@ class ImageCacheService {
       if (cachedFile != null) return cachedFile;
 
       // Download from Firebase
-      final ref = _storage.refFromURL(firebaseUrl);
       final filename = _generateCacheFilename(firebaseUrl);
       final cacheDirectory = await _cacheDir;
       final file = File('${cacheDirectory.path}/$filename');
 
-      // Download the file
-      await ref.writeToFile(file);
+      try {
+        // Modern approach for Firebase Storage 12.x
+        final ref = _storage.refFromURL(firebaseUrl);
 
-      // Update cache information in SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      final cacheInfo = prefs.getString(_cacheInfoKey);
-      final cacheData = cacheInfo != null
-          ? json.decode(cacheInfo) as Map<String, dynamic>
-          : <String, dynamic>{};
+        // Get bytes directly
+        final bytes = await ref.getData();
+        if (bytes != null) {
+          await file.writeAsBytes(bytes);
 
-      cacheData[firebaseUrl] = {
-        'filename': filename,
-        'timestamp': DateTime.now().toIso8601String(),
-      };
+          // Update cache information in SharedPreferences
+          final prefs = await SharedPreferences.getInstance();
+          final cacheInfo = prefs.getString(_cacheInfoKey);
+          final cacheData = cacheInfo != null
+              ? json.decode(cacheInfo) as Map<String, dynamic>
+              : <String, dynamic>{};
 
-      await prefs.setString(_cacheInfoKey, json.encode(cacheData));
+          cacheData[firebaseUrl] = {
+            'filename': filename,
+            'timestamp': DateTime.now().toIso8601String(),
+          };
 
-      _logDebug('✅ Successfully cached image: $firebaseUrl');
-      return file;
+          await prefs.setString(_cacheInfoKey, json.encode(cacheData));
+
+          _logDebug('✅ Successfully cached image: $firebaseUrl');
+          return file;
+        } else {
+          throw Exception('Failed to download image data');
+        }
+      } catch (e) {
+        _logDebug('Error downloading image: $e', isError: true);
+        return null;
+      }
     } catch (e) {
       _logDebug('Error downloading and caching image: $e', isError: true);
       return null;

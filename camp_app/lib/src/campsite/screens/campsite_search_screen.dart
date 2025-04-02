@@ -388,19 +388,19 @@ class _SearchScreenState extends State<SearchScreen> {
                               // Wrap AlertDialog in a StatefulBuilder to update the state of content
                               builder:
                                   (BuildContext context, StateSetter setState) {
-                                Widget buildCategoryFacilityButtons() {
-                                  return Wrap(
-                                    spacing: 0.5,
-                                    runSpacing: 2.0,
-                                    children: [
-                                      _buildFilterButton('Swimming Pool', Icons.pool),
-                                      _buildFilterButton('Hiking', Icons.hiking),
-                                      _buildFilterButton('Fishing', Icons.water),
-                                      _buildFilterButton('Braai Place', Icons.local_fire_department),
-                                      _buildFilterButton('Pet Friendly', Icons.pets),
-                                    ],
-                                  );
-                                }
+                                    Widget buildCategoryFacilityButtons() {
+                                      return Wrap(
+                                        spacing: 0.5,
+                                        runSpacing: 2.0,
+                                        children: [
+                                          _buildFilterButton('Swimming Pool', Icons.pool, setState),
+                                          _buildFilterButton('Hiking', Icons.hiking, setState),
+                                          _buildFilterButton('Fishing', Icons.water, setState),
+                                          _buildFilterButton('Braai Place', Icons.local_fire_department, setState),
+                                          _buildFilterButton('Pet Friendly', Icons.pets, setState),
+                                        ],
+                                      );
+                                    }
 
                                 return AlertDialog(
                                   title: const Text('Filter Options'),
@@ -847,23 +847,37 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildFilterButton(String category, IconData icon) {
+  Widget _buildFilterButton(String category, IconData icon, StateSetter setState) {
+    // Use the selectedCategories map from the parent class
     bool isSelected = selectedCategories[category] ?? false;
-    return ElevatedButton.icon(
-      icon: Icon(icon, size: 18.0, color: isSelected ? Colors.white : const Color(0xff2e6f40)),
-      label: Text(category, style: GoogleFonts.montserrat(color: isSelected ? Colors.white : const Color(0xff2e6f40))),
-      style: ElevatedButton.styleFrom(
-        foregroundColor: isSelected ? Colors.white : const Color(0xff2e6f40),
-        backgroundColor: isSelected ? const Color(0xff2e6f40) : Colors.grey[200],
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(25),
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0, bottom: 8.0),
+      child: ElevatedButton.icon(
+        icon: Icon(
+            icon,
+            size: 18.0,
+            color: isSelected ? Colors.white : const Color(0xff2e6f40)
         ),
+        label: Text(
+            category,
+            style: GoogleFonts.montserrat(
+                color: isSelected ? Colors.white : const Color(0xff2e6f40)
+            )
+        ),
+        style: ElevatedButton.styleFrom(
+          foregroundColor: isSelected ? Colors.white : const Color(0xff2e6f40),
+          backgroundColor: isSelected ? const Color(0xff2e6f40) : Colors.grey[200],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(25),
+          ),
+        ),
+        onPressed: () {
+          setState(() {
+            selectedCategories[category] = !isSelected;
+          });
+        },
       ),
-      onPressed: () {
-        setState(() {
-          selectedCategories[category] = !isSelected;
-        });
-      },
     );
   }
 
@@ -994,37 +1008,24 @@ class _SearchScreenState extends State<SearchScreen> {
           Row(
             children: [
               if (icon != null)
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      widget.query = firstTag; // Update the query
-                      futureResults = performSearch(
-                        widget.query,
-                        locationFilter,
-                        categoryFilter as List<String>?,
-                        receptionFilter,
-                      ); // Perform a new search
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(5.0),
-                    decoration: BoxDecoration(
-                      color: const Color(0xff2e6f40),
-                      borderRadius: BorderRadius.circular(20.0),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(icon, color: Colors.white),
-                        const SizedBox(width: 5.0),
-                        Text(
-                          firstTag,
-                          style: GoogleFonts.montserrat(
-                            fontSize: 16.0,
-                            color: Colors.white,
-                          ),
+                Container(
+                  padding: const EdgeInsets.all(5.0),
+                  decoration: BoxDecoration(
+                    color: const Color(0xff2e6f40),
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(icon, color: Colors.white),
+                      const SizedBox(width: 5.0),
+                      Text(
+                        firstTag,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 16.0,
+                          color: Colors.white,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               const SizedBox(width: 10.0),

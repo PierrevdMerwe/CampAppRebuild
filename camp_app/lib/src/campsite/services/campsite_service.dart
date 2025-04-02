@@ -108,30 +108,38 @@ class CampsiteService {
     try {
       final sitesFolderRef = _storage.ref().child('sites');
       final campsiteFolderRef = sitesFolderRef.child(campsiteId);
-      final result = await campsiteFolderRef.listAll();
-
-      final imageItems = result.items.where((item) =>
-      item.fullPath.toLowerCase().endsWith('.jpg') ||
-          item.fullPath.toLowerCase().endsWith('.jpeg') ||
-          item.fullPath.toLowerCase().endsWith('.png')).toList();
 
       List<String> imageUrls = [];
-      for (var item in imageItems) {
-        // Check cache first
-        final cacheService = ImageCacheService();
-        final cachedUrl = await cacheService.getCachedImage(item.fullPath);
-        if (cachedUrl != null) {
-          imageUrls.add(cachedUrl.path);
-          continue;
+      try {
+        final result = await campsiteFolderRef.listAll();
+
+        final imageItems = result.items.where((item) =>
+        item.name.toLowerCase().endsWith('.jpg') ||
+            item.name.toLowerCase().endsWith('.jpeg') ||
+            item.name.toLowerCase().endsWith('.webp') ||
+            item.name.toLowerCase().endsWith('.png')).toList();
+
+        for (var item in imageItems) {
+          try {
+            String url = await item.getDownloadURL();
+            imageUrls.add(url);
+          } catch (e) {
+            print('Error getting download URL for ${item.name}: $e');
+            continue;
+          }
         }
 
-        // If not in cache, get from Firebase and cache it
-        String url = await item.getDownloadURL();
-        imageUrls.add(url);
+        if (imageUrls.isEmpty && imageItems.isNotEmpty) {
+          print('Warning: Found ${imageItems.length} images but couldn\'t get URLs');
+        }
+      } catch (e) {
+        print('Error listing images in storage: $e');
+        return [];
       }
 
       return imageUrls;
     } catch (e) {
+      print('Failed to fetch campsite images: $e');
       throw Exception('Failed to fetch campsite images: $e');
     }
   }

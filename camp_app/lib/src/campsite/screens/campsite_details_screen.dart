@@ -584,7 +584,9 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> with SingleTi
   }
 
   Widget _buildBookNowButton() {
-    final bookLink = widget.campsite['book_link'];
+    // Safely check if the book_link field exists and is not empty
+    final data = widget.campsite.data() as Map<String, dynamic>?;
+    final bookLink = data != null && data.containsKey('book_link') ? data['book_link'] : null;
 
     if (bookLink == null || bookLink.isEmpty) {
       return const SizedBox.shrink(); // Don't show button if no link
