@@ -620,9 +620,22 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> with SingleTi
 
   void _launchUrl(String url) async {
     final Uri uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
+
+    try {
+      // Track the click before launching URL
+      final bookingTrackingService = ViewTrackingService();
+      await bookingTrackingService.incrementBookingLinkClicks(widget.campsite.id);
+
+      // Launch the URL
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch booking link')),
+        );
+      }
+    } catch (e) {
+      print('Error tracking or launching booking URL: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not launch booking link')),
       );

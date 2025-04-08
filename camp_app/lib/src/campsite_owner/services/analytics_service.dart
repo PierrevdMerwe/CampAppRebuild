@@ -104,6 +104,31 @@ class AnalyticsService {
       });
     }
 
+    // Add this near the other stats calculation
+// Get booking click data
+    int totalBookingClicks = data['total_book_link_clicks'] ?? 0;
+    Map<String, dynamic> clicksByMonth = {};
+
+    if (data['book_link_clicks'] != null && data['book_link_clicks'] is Map) {
+      clicksByMonth = Map<String, dynamic>.from(data['book_link_clicks']);
+    }
+
+    final currentMonthBookingClicks = clicksByMonth[currentMonthKey] ?? 0;
+    final lastMonthBookingClicks = clicksByMonth[lastMonthKey] ?? 0;
+
+// Calculate booking click growth percentage
+    double bookingClicksGrowth = 0;
+    if (lastMonthBookingClicks > 0) {
+      bookingClicksGrowth = ((currentMonthBookingClicks - lastMonthBookingClicks) / lastMonthBookingClicks) * 100;
+    }
+
+// Calculate conversion rate (booking clicks to views)
+    // Calculate booking conversion rate (booking clicks to views)
+    double bookingConversionRate = 0;
+    if (totalViews > 0) {
+      bookingConversionRate = (totalBookingClicks / totalViews) * 100;
+    }
+
     // Generate insights
     final viewsInsight = _generateViewsInsight(
         currentMonthViews,
@@ -131,6 +156,11 @@ class AnalyticsService {
       'totalReviews': totalReviews,
       'reviewsData': reviewsData,
       'conversionRate': conversionRate,
+      'totalBookingClicks': totalBookingClicks,
+      'monthlyBookingClicks': currentMonthBookingClicks,
+      'lastMonthBookingClicks': lastMonthBookingClicks,
+      'bookingClicksGrowth': bookingClicksGrowth,
+      'bookingConversionRate': bookingConversionRate,
       'insights': {
         'views': viewsInsight,
         'engagement': engagementInsight,

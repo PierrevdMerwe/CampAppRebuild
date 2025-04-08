@@ -118,6 +118,106 @@ class ViewTrackingService {
     }
   }
 
+  /// Increment the booking link click count for a campsite
+  Future<void> incrementBookingLinkClicks(String campsiteId) async {
+    try {
+      _logDebug('Incrementing booking link clicks for campsite: $campsiteId');
+
+      final campsiteRef = _firestore.collection('sites').doc(campsiteId);
+      final monthYearKey = _getCurrentMonthYearKey();
+
+      // Use a transaction to ensure atomic update
+      await _firestore.runTransaction((transaction) async {
+        // Get the current campsite data
+        final campsiteDoc = await transaction.get(campsiteRef);
+
+        if (!campsiteDoc.exists) {
+          throw Exception('Campsite does not exist');
+        }
+
+        // Set up the book_link_clicks field structure if it doesn't exist
+        Map<String, dynamic> clicksData = {};
+        if (campsiteDoc.data()!.containsKey('book_link_clicks')) {
+          // Handle both cases: clicks as a map or clicks as an integer (legacy data)
+          final existingClicks = campsiteDoc.data()!['book_link_clicks'];
+          if (existingClicks is Map) {
+            clicksData = Map<String, dynamic>.from(existingClicks);
+          } else if (existingClicks is int) {
+            // If clicks is an integer (old format), initialize the new format
+            clicksData = {
+              'total_legacy': existingClicks
+            };
+          }
+        }
+
+        // Increment the click count for the current month/year
+        final currentMonthClicks = clicksData[monthYearKey] ?? 0;
+        clicksData[monthYearKey] = currentMonthClicks + 1;
+
+        // Update the document
+        transaction.update(campsiteRef, {
+          'book_link_clicks': clicksData,
+          'total_book_link_clicks': FieldValue.increment(1),
+        });
+      });
+
+      _logDebug('✅ Successfully incremented booking link click count');
+    } catch (e) {
+      _logDebug('Error incrementing booking link click count: $e', isError: true);
+    }
+  }
+
+  /// Get booking link click statistics for a specific campsite
+  Future<Map<String, dynamic>> getCampsiteBookingClickStats(String campsiteId) async {
+    try {
+      final campsiteDoc = await _firestore.collection('sites').doc(campsiteId).get();
+
+      if (!campsiteDoc.exists) {
+        throw Exception('Campsite does not exist');
+      }
+
+      // Extract clicks data
+      Map<String, dynamic> clicksData = {};
+      int totalClicks = 0;
+
+      if (campsiteDoc.data()!.containsKey('book_link_clicks')) {
+        final existingClicks = campsiteDoc.data()!['book_link_clicks'];
+        if (existingClicks is Map) {
+          clicksData = Map<String, dynamic>.from(existingClicks);
+        } else if (existingClicks is int) {
+          // Legacy format
+          clicksData = {
+            'total_legacy': existingClicks
+          };
+          totalClicks = existingClicks;
+        }
+      }
+
+      if (campsiteDoc.data()!.containsKey('total_book_link_clicks')) {
+        totalClicks = campsiteDoc.data()!['total_book_link_clicks'] ?? 0;
+      } else if (clicksData.isNotEmpty && totalClicks == 0) {
+        // Calculate total if needed
+        totalClicks = clicksData.values.fold(0, (sum, value) => sum + (value is int ? value : 0));
+      }
+
+      // Calculate statistics
+      final currentMonthClicks = clicksData[_getCurrentMonthYearKey()] ?? 0;
+
+      return {
+        'monthly_clicks': clicksData,
+        'total_clicks': totalClicks,
+        'current_month_clicks': currentMonthClicks,
+      };
+    } catch (e) {
+      _logDebug('Error getting booking click stats: $e', isError: true);
+      return {
+        'monthly_clicks': {},
+        'total_clicks': 0,
+        'current_month_clicks': 0,
+      };
+    }
+  }
+
   /// Get top viewed campsites
   Future<List<Map<String, dynamic>>> getTopViewedCampsites({int limit = 10}) async {
     try {

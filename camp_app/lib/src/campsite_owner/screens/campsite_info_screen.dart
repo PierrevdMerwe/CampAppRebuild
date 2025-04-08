@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../auth/providers/user_provider.dart';
 import '../../shared/widgets/cached_firebase_image.dart';
 
@@ -129,6 +130,14 @@ class _CampsiteInfoScreenState extends State<CampsiteInfoScreen> {
     final telephoneController = TextEditingController(text: data['telephone'] ?? '');
     final provinceController = TextEditingController(text: data['province'] ?? '');
     final signalController = TextEditingController(text: data['signal'] ?? '');
+    final locationController = TextEditingController(text: data['main_fall_under'] ?? '');
+    final latitudeController = TextEditingController(
+        text: data['location']?.latitude?.toString() ?? '0.0'
+    );
+    final longitudeController = TextEditingController(
+        text: data['location']?.longitude?.toString() ?? '0.0'
+    );
+    final bookingLinkController = TextEditingController(text: data['book_link'] ?? '');
 
     // Save form data
     bool isSaving = false;
@@ -165,6 +174,87 @@ class _CampsiteInfoScreenState extends State<CampsiteInfoScreen> {
                         labelStyle: GoogleFonts.montserrat(),
                       ),
                       maxLines: 3,
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: locationController,
+                      decoration: InputDecoration(
+                        labelText: 'Location',
+                        labelStyle: GoogleFonts.montserrat(),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: latitudeController,
+                            decoration: InputDecoration(
+                              labelText: 'Latitude',
+                              labelStyle: GoogleFonts.montserrat(),
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextField(
+                            controller: longitudeController,
+                            decoration: InputDecoration(
+                              labelText: 'Longitude',
+                              labelStyle: GoogleFonts.montserrat(),
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () {
+                        // Launch URL to help page
+                        launchUrl(Uri.parse('https://support.google.com/maps/answer/18539?hl=en&co=GENIE.Platform%3DDesktop'));
+                      },
+                      child: Text(
+                        'How to find your latitude and longitude',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          color: const Color(0xff2e6f40),
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+// Disabled Tags field
+                    TextField(
+                      enabled: false,
+                      decoration: InputDecoration(
+                        labelText: 'Tags',
+                        labelStyle: GoogleFonts.montserrat(color: Colors.grey),
+                        hintText: 'Tags are managed by Camp App',
+                        hintStyle: GoogleFonts.montserrat(color: Colors.grey),
+                        prefixIcon: const Icon(Icons.tag, color: Colors.grey),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12, top: 4),
+                      child: Text(
+                        'Camp App will decide how this site is tagged from information given (to avoid misleading campers)',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: bookingLinkController,
+                      decoration: InputDecoration(
+                        labelText: 'Booking Link',
+                        labelStyle: GoogleFonts.montserrat(),
+                        hintText: 'https://your-booking-site.com',
+                      ),
+                      keyboardType: TextInputType.url,
                     ),
                     const SizedBox(height: 16),
                     TextField(
@@ -227,6 +317,7 @@ class _CampsiteInfoScreenState extends State<CampsiteInfoScreen> {
 
                     try {
                       // Create change request document
+                      // Update the fields in the change request
                       await _firestore.collection('listing_change_requests').add({
                         'campsite_id': _selectedCampsiteId,
                         'name': nameController.text,
@@ -235,6 +326,12 @@ class _CampsiteInfoScreenState extends State<CampsiteInfoScreen> {
                         'telephone': telephoneController.text,
                         'province': provinceController.text,
                         'signal': signalController.text,
+                        'main_fall_under': locationController.text,
+                        'location': GeoPoint(
+                            double.tryParse(latitudeController.text) ?? 0.0,
+                            double.tryParse(longitudeController.text) ?? 0.0
+                        ),
+                        'book_link': bookingLinkController.text,
                         'requested_at': FieldValue.serverTimestamp(),
                         'status': 'pending',
                         'owner_uid': Provider.of<UserProvider>(context, listen: false).user?.uid,
@@ -496,6 +593,14 @@ class _CampsiteInfoScreenState extends State<CampsiteInfoScreen> {
 
                 // Tags
                 _buildTagsSection(data),
+
+                const SizedBox(height: 24),
+
+                _buildDetailRow(
+                  FontAwesomeIcons.locationDot,
+                  'Location',
+                  data['main_fall_under'] ?? 'Not specified',
+                ),
 
                 const SizedBox(height: 24),
 

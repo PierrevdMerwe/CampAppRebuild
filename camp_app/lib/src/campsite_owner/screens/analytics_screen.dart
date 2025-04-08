@@ -487,23 +487,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Widget _buildConversionCard() {
+    // Get booking click data from analytics
+    final int totalViews = _analyticsData['totalViews'] ?? 0;
+    final int totalBookingClicks = _analyticsData['totalBookingClicks'] ?? 0;
+    final int currentMonthBookingClicks = _analyticsData['monthlyBookingClicks'] ?? 0;
+    final double bookingConversionRate = _analyticsData['bookingConversionRate'] ?? 0.0;
+    final double bookingClicksGrowth = _analyticsData['bookingClicksGrowth'] ?? 0.0;
+
+    // Check if we have any booking click data
+    final bool hasBookingData = totalBookingClicks > 0;
+
     return AnalyticsStatCard(
       title: 'Conversions',
-      headerTrailing: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: const Color(0xff2e6f40).withValues(alpha: .1),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          'Coming Soon',
-          style: GoogleFonts.montserrat(
-            fontSize: 12,
-            color: const Color(0xff2e6f40),
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
       content: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
@@ -511,7 +506,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           color: Colors.grey[100],
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Column(
+        child: hasBookingData
+            ? Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
@@ -529,26 +525,241 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               ),
             ),
             const SizedBox(height: 16),
+
+            // Conversion Rate
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const FaIcon(
-                  FontAwesomeIcons.arrowRightArrowLeft,
-                  color: Color(0xff2e6f40),
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.purple.withValues(alpha: .1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Center(
+                    child: FaIcon(
+                      FontAwesomeIcons.chartPie,
+                      color: Colors.purple,
+                      size: 20,
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Conversion Rate',
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Views to Booking Clicks',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 Text(
-                  'This feature is coming soon!',
+                  '${bookingConversionRate.toStringAsFixed(1)}%',
                   style: GoogleFonts.montserrat(
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: const Color(0xff2e6f40),
                   ),
                 ),
               ],
             ),
+
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 16),
+
+            // Total Clicks
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: .1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Center(
+                    child: FaIcon(
+                      FontAwesomeIcons.handPointer,
+                      color: Colors.amber,
+                      size: 20,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Total Booking Clicks',
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'All Time',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  totalBookingClicks.toString(),
+                  style: GoogleFonts.montserrat(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Monthly Clicks
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withValues(alpha: .1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Center(
+                    child: FaIcon(
+                      FontAwesomeIcons.calendarCheck,
+                      color: Colors.blue,
+                      size: 20,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'This Month',
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Booking Clicks',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  currentMonthBookingClicks.toString(),
+                  style: GoogleFonts.montserrat(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Growth
+            if (bookingClicksGrowth != 0)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: bookingClicksGrowth >= 0
+                      ? Colors.green.withValues(alpha: .1)
+                      : Colors.red.withValues(alpha: .1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      bookingClicksGrowth >= 0 ? Icons.arrow_upward : Icons.arrow_downward,
+                      color: bookingClicksGrowth >= 0 ? Colors.green : Colors.red,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${bookingClicksGrowth.abs().toStringAsFixed(1)}% ${bookingClicksGrowth >= 0 ? 'increase' : 'decrease'} from last month',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        color: bookingClicksGrowth >= 0 ? Colors.green : Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        )
+            : Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Booking Conversion Rate',
+              style: GoogleFonts.montserrat(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Track how many viewers proceed to booking',
+              style: GoogleFonts.montserrat(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blue.withValues(alpha: .1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.info_outline,
+                    color: Colors.blue,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'When users click on your booking link, conversion data will appear here',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        color: Colors.blue[800],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 16),
             Text(
-              'Soon you\'ll be able to track how many visitors click the booking button on your campsite page, helping you understand your conversion rate from views to booking inquiries.',
+              'Make sure your campsite listing has a booking link to track conversions',
               style: GoogleFonts.montserrat(
                 fontSize: 14,
               ),
