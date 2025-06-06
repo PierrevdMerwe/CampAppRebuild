@@ -157,6 +157,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                         '', // Empty query to show all campsites
                                         initialShowMap: true, // Start with map view
                                         initialCenter: const LatLng(-30.74155601977579, 24.34204925536877), // Default center
+                                        customTitle: 'All Campsites on Map', // Add this custom title
                                       ),
                                     ),
                                   );

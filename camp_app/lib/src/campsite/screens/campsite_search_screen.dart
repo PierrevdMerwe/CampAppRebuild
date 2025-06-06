@@ -16,12 +16,14 @@ class SearchScreen extends StatefulWidget {
   String query;
   final bool initialShowMap;
   final LatLng? initialCenter;
+  final String? customTitle;
 
   SearchScreen(
     this.query, {
     Key? key,
     this.initialShowMap = false,
     this.initialCenter,
+        this.customTitle,
   }) : super(key: key);
 
   @override
@@ -224,7 +226,10 @@ class _SearchScreenState extends State<SearchScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: Text('Search results for "${widget.query}"'),
+        title: Text(
+          widget.customTitle ?? 'Search results for "${widget.query}"', // Use custom title if provided
+          style: GoogleFonts.montserrat(), // Add style if needed
+        ),
       ),
       body: _buildSearchResults(),
     );

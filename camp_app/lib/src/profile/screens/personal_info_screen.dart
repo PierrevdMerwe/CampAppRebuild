@@ -29,31 +29,55 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   final ProfileIconService _profileIconService = ProfileIconService();
   Map<String, dynamic>? _profileIconData;
   bool _isLoadingIcon = true;
+  String? _originalName;
+  String? _originalUsername;
+  bool _hasChanges = false;
 
   @override
   void initState() {
     super.initState();
     final user = context.read<UserProvider>().user;
-    _nameController = TextEditingController(text: user?.name);
+    _originalName = user?.name ?? '';
+    _originalUsername = user?.username ?? '';
+
+    _nameController = TextEditingController(text: _originalName);
     _emailController = TextEditingController(text: user?.email);
-    _usernameController = TextEditingController(text: user?.username);
+    _usernameController = TextEditingController(text: _originalUsername);
     _userNumberController = TextEditingController(text: user?.userNumber);
     _joinedController = TextEditingController(
       text: user?.createdAt != null
           ? DateFormat('dd MMMM yyyy').format(user!.createdAt)
           : '',
     );
+
+    // Add listeners to track changes
+    _nameController.addListener(_checkForChanges);
+    _usernameController.addListener(_checkForChanges);
+
     _loadProfileIcon();
   }
 
   @override
   void dispose() {
+    _nameController.removeListener(_checkForChanges);
+    _usernameController.removeListener(_checkForChanges);
     _nameController.dispose();
     _emailController.dispose();
     _usernameController.dispose();
     _userNumberController.dispose();
     _joinedController.dispose();
     super.dispose();
+  }
+
+  void _checkForChanges() {
+    final hasChanges = _nameController.text != _originalName ||
+        _usernameController.text != _originalUsername;
+
+    if (hasChanges != _hasChanges) {
+      setState(() {
+        _hasChanges = hasChanges;
+      });
+    }
   }
 
   Future<void> _loadProfileIcon() async {
@@ -79,18 +103,226 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     }
   }
 
+  Future<void> _showUpdateConfirmationDialog() async {
+    final currentName = _nameController.text;
+    final currentUsername = _usernameController.text;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  FontAwesomeIcons.pencil,
+                  color: AppColors.primary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Update Profile',
+                style: GoogleFonts.montserrat(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Please confirm your profile changes:',
+                  style: GoogleFonts.montserrat(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                if (currentName != _originalName) ...[
+                  _buildChangeRow(
+                    'Full Name',
+                    _originalName ?? '',
+                    currentName,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                if (currentUsername != _originalUsername) ...[
+                  _buildChangeRow(
+                    'Username',
+                    _originalUsername ?? '',
+                    currentUsername,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.grey[600],
+                overlayColor: Colors.grey.withValues(alpha: 0.1),
+              ),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.montserrat(
+                  color: Colors.grey[600],
+                ),
+              ),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                _updateProfile();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+              icon: const Icon(FontAwesomeIcons.check, size: 18, color: Colors.white,),
+              label: Text(
+                'Update',
+                style: GoogleFonts.montserrat(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildChangeRow(String label, String oldValue, String newValue) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.montserrat(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: AppColors.primary,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.grey[50],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey[200]!),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'Current',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red[700],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      oldValue.isEmpty ? '(empty)' : oldValue,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        color: oldValue.isEmpty ? Colors.grey : Colors.black87,
+                        fontStyle: oldValue.isEmpty ? FontStyle.italic : FontStyle.normal,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'New',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green[700],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      newValue.isEmpty ? '(empty)' : newValue,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        color: newValue.isEmpty ? Colors.grey : Colors.black87,
+                        fontStyle: newValue.isEmpty ? FontStyle.italic : FontStyle.normal,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Future<void> _showDeleteAccountDialog() async {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          title: Text(
-            'Delete Account',
-            style: GoogleFonts.montserrat(
-              fontWeight: FontWeight.bold,
-              color: Colors.red,
-            ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.delete_outline,
+                  color: Colors.red,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Delete Account',
+                style: GoogleFonts.montserrat(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red,
+                ),
+              ),
+            ],
           ),
           content: Text(
             'Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.',
@@ -99,22 +331,28 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.grey[600], // Fix the purple highlight
+                overlayColor: Colors.grey.withValues(alpha: 0.1), // Gray highlight on hover
+              ),
               child: Text(
                 'Cancel',
                 style: GoogleFonts.montserrat(
-                  color: Colors.grey,
+                  color: Colors.grey[600],
                 ),
               ),
             ),
-            ElevatedButton(
+            ElevatedButton.icon(
               onPressed: () {
                 Navigator.pop(context);
                 _deleteAccount();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
               ),
-              child: Text(
+              icon: const Icon(Icons.delete_forever, size: 18, color: Colors.white,),
+              label: Text(
                 'Delete',
                 style: GoogleFonts.montserrat(
                   color: Colors.white,
@@ -176,11 +414,15 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   Future<void> _updateProfile() async {
     setState(() => _isLoading = true);
     try {
-      // Only update allowed fields
       await context.read<UserProvider>().updateUserProfile(
         name: _nameController.text,
         username: _usernameController.text,
       );
+
+      // Update original values after successful update
+      _originalName = _nameController.text;
+      _originalUsername = _usernameController.text;
+      _checkForChanges(); // This will disable the button again
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -396,9 +638,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                     height: 50,
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : _updateProfile,
+                      onPressed: (_isLoading || !_hasChanges) ? null : _showUpdateConfirmationDialog, // Changed this line
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: _hasChanges ? AppColors.primary : Colors.grey, // Change color based on changes
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15),
                         ),
@@ -406,7 +648,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                       child: _isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
                           : Text(
-                        'Update Profile',
+                        _hasChanges ? 'Update Profile' : 'No Changes Made', // Change text based on changes
                         style: GoogleFonts.montserrat(
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -418,35 +660,32 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                 const SizedBox(height: 16),
                 Consumer<UserProvider>(
                   builder: (context, userProvider, _) {
-                    // Only show delete button if user is logged in
                     if (userProvider.user == null) {
                       return const SizedBox.shrink();
                     }
 
-                    return Column(
-                      children: [
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          height: 50,
-                          width: double.infinity, // Same width as update button
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _showDeleteAccountDialog,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
-                              ),
+                    return Padding(
+                      padding: const EdgeInsets.all(16), // Only top padding
+                      child: SizedBox(
+                        height: 50, // Exact same height
+                        width: double.infinity, // Exact same width
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _showDeleteAccountDialog,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15), // Exact same border radius
                             ),
-                            child: Text(
-                              'Delete Account',
-                              style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                          ),
+                          child: Text(
+                            'Delete Account',
+                            style: GoogleFonts.montserrat(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
                           ),
                         ),
-                      ],
+                      ),
                     );
                   },
                 ),
