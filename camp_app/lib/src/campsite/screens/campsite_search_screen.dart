@@ -220,7 +220,10 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
         title: Text('Search results for "${widget.query}"'),
       ),
       body: _buildSearchResults(),
@@ -882,22 +885,39 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<List<DocumentSnapshot>> performSearch(
-    String query,
-    String? locationFilter,
-    List<String>? categoryFilters,
-    String? receptionFilter,
-  ) async {
+      String query,
+      String? locationFilter,
+      List<String>? categoryFilters,
+      String? receptionFilter,
+      ) async {
     query = query.toLowerCase();
     List<DocumentSnapshot> results = [];
+
+    // Debug logging
+    print('🔍 Search Debug Info:');
+    print('  Query: $query');
+    print('  Location Filter: $locationFilter');
+    print('  Category Filters: $categoryFilters');
+    print('  Reception Filter: $receptionFilter');
 
     await FirebaseFirestore.instance
         .collection('sites')
         .get()
         .then((querySnapshot) {
+      print('📊 Total documents found: ${querySnapshot.docs.length}');
+
       for (var doc in querySnapshot.docs) {
         var data = doc.data();
         bool matchesQuery = false;
         bool matchesFilters = true;
+
+        // Debug: Print campsite info for first few results
+        if (results.length < 3) {
+          print('🏕️ Campsite: ${data['name']}');
+          print('  Province: "${data['province']}"');
+          print('  Main Fall Under: "${data['main_fall_under']}"');
+          print('  Tags: ${data['tags']}');
+        }
 
         // Check 'fall_under' field
         if (data['fall_under'] != null &&
@@ -933,15 +953,26 @@ class _SearchScreenState extends State<SearchScreen> {
           matchesQuery = true;
         }
 
-        // Apply location filter
+        // Apply location filter with debug logging
         if (locationFilter != null &&
-            data['province'] != null &&
-            data['province'].toLowerCase() != locationFilter.toLowerCase()) {
-          matchesFilters = false;
+            data['province'] != null) {
+          String dataProvince = data['province'].toLowerCase().trim();
+          String filterProvince = locationFilter.toLowerCase().trim();
+
+          print('🌍 Location Filter Debug:');
+          print('  Data Province: "$dataProvince"');
+          print('  Filter Province: "$filterProvince"');
+          print('  Match: ${dataProvince == filterProvince}');
+
+          if (dataProvince != filterProvince) {
+            matchesFilters = false;
+            print('  ❌ Location filter failed for: ${data['name']}');
+          }
         }
 
         // Apply category filter
         if (categoryFilters != null &&
+            categoryFilters.isNotEmpty &&
             data['tags'] != null &&
             !categoryFilters.any((filter) => data['tags'].contains(filter))) {
           matchesFilters = false;
@@ -967,6 +998,8 @@ class _SearchScreenState extends State<SearchScreen> {
           results.add(doc);
         }
       }
+
+      print('📈 Final Results: ${results.length} campsites found');
     });
 
     return results;

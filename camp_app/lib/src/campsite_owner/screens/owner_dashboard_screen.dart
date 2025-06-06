@@ -12,7 +12,7 @@ import './campsite_info_screen.dart';
 import './analytics_screen.dart';
 
 class OwnerDashboardScreen extends StatefulWidget {
-  const OwnerDashboardScreen({Key? key}) : super(key: key);
+  const OwnerDashboardScreen({super.key});
 
   @override
   _OwnerDashboardScreenState createState() => _OwnerDashboardScreenState();

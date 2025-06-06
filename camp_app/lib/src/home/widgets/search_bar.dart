@@ -55,6 +55,11 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
                   child: TextField(
                     controller: _searchController,
                     cursorColor: const Color(0xff2e6f40),
+                    onSubmitted: (value) { // Add this line
+                      if (value.isNotEmpty) {
+                        _handleSearch(context);
+                      }
+                    },
                     decoration: InputDecoration(
                       hintText: 'What are you looking for?',
                       hintStyle: TextStyle(color: Colors.grey[600]),
@@ -109,6 +114,9 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
 
   void _handleSearch(BuildContext context) {
     if (_searchController.text.isNotEmpty) {
+      // Hide keyboard
+      FocusScope.of(context).unfocus();
+
       Navigator.push(
         context,
         MaterialPageRoute(

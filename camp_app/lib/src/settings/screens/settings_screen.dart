@@ -155,11 +155,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               const FaIcon(FontAwesomeIcons.locationDot,
                                   color: Color(0xff2e6f40), size: 20),
                               const SizedBox(width: 10),
-                              Text(
-                                'Location permission',
-                                style: GoogleFonts.montserrat(
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : Colors.black,
+                              Flexible(
+                                child: Text(
+                                  'Location permission',
+                                  style: GoogleFonts.montserrat(
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? Colors.white : Colors.black,
+                                  ),
                                 ),
                               ),
                             ],
@@ -184,11 +186,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               const FaIcon(FontAwesomeIcons.images,
                                   color: Color(0xff2e6f40), size: 20),
                               const SizedBox(width: 10),
-                              Text(
-                                'Photo gallery permission',
-                                style: GoogleFonts.montserrat(
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : Colors.black,
+                              Flexible(
+                                child: Text(
+                                  'Photo gallery permission',
+                                  style: GoogleFonts.montserrat(
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? Colors.white : Colors.black,
+                                  ),
                                 ),
                               ),
                             ],
@@ -213,11 +217,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               const FaIcon(FontAwesomeIcons.bell,
                                   color: Color(0xff2e6f40), size: 20),
                               const SizedBox(width: 10),
-                              Text(
-                                'Notifications permission',
-                                style: GoogleFonts.montserrat(
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : Colors.black,
+                              Flexible(
+                                child: Text(
+                                  'Notifications permission',
+                                  style: GoogleFonts.montserrat(
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? Colors.white : Colors.black,
+                                  ),
                                 ),
                               ),
                             ],

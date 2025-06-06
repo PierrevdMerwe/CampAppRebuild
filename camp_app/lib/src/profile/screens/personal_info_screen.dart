@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../auth/providers/user_provider.dart';
+import '../../auth/screens/login.dart';
 import '../../auth/widgets/custom_text_field.dart';
 import '../../core/config/theme/theme_model.dart';
 import '../../shared/constants/app_colors.dart';
@@ -74,6 +75,100 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         setState(() {
           _isLoadingIcon = false;
         });
+      }
+    }
+  }
+
+  Future<void> _showDeleteAccountDialog() async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text(
+            'Delete Account',
+            style: GoogleFonts.montserrat(
+              fontWeight: FontWeight.bold,
+              color: Colors.red,
+            ),
+          ),
+          content: Text(
+            'Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.',
+            style: GoogleFonts.montserrat(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.montserrat(
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _deleteAccount();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: Text(
+                'Delete',
+                style: GoogleFonts.montserrat(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteAccount() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw 'No user logged in';
+      }
+
+      // Clear user data from provider
+      await context.read<UserProvider>().clearUserData();
+
+      // Delete Firebase user account
+      await user.delete();
+
+      if (mounted) {
+        // Navigate to login screen
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+              (Route<dynamic> route) => false,
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Account deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting account: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -194,7 +289,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                         ),
                         Padding(
                           padding: const EdgeInsets.only(left: 12, top: 4),
-                          child: Row(
+                          child: Wrap(
                             children: [
                               Icon(Icons.info_outline,
                                 size: 12,
@@ -319,6 +414,41 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                       ),
                     ),
                   ),
+                ),
+                const SizedBox(height: 16),
+                Consumer<UserProvider>(
+                  builder: (context, userProvider, _) {
+                    // Only show delete button if user is logged in
+                    if (userProvider.user == null) {
+                      return const SizedBox.shrink();
+                    }
+
+                    return Column(
+                      children: [
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          height: 50,
+                          width: double.infinity, // Same width as update button
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _showDeleteAccountDialog,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                            ),
+                            child: Text(
+                              'Delete Account',
+                              style: GoogleFonts.montserrat(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),

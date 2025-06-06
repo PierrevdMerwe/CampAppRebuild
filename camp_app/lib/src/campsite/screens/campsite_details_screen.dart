@@ -38,6 +38,7 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> with SingleTi
   int _totalReviews = 0;
   final ViewTrackingService _viewTrackingService = ViewTrackingService();
   bool _viewTracked = false;
+  final GlobalKey _commentSectionKey = GlobalKey();
 
   @override
   void didChangeDependencies() {
@@ -179,6 +180,7 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> with SingleTi
       appBar: AppBar(
         title: Text('Campsite Details', style: GoogleFonts.montserrat()),
         backgroundColor: Colors.white,
+        elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.share, color: Colors.red),
@@ -339,10 +341,23 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> with SingleTi
                                           size: 20,
                                         ),
                                         const SizedBox(width: 8),
-                                        Text(
-                                          '$_totalReviews ${_totalReviews == 1 ? 'review' : 'reviews'}',
-                                          style: GoogleFonts.montserrat(
-                                            color: Colors.grey[600],
+                                        GestureDetector(
+                                          onTap: () {
+                                            // Scroll to comments section
+                                            if (_commentSectionKey.currentContext != null) {
+                                              Scrollable.ensureVisible(
+                                                _commentSectionKey.currentContext!,
+                                                duration: const Duration(milliseconds: 500),
+                                                curve: Curves.easeInOut,
+                                              );
+                                            }
+                                          },
+                                          child: Text(
+                                            '$_totalReviews ${_totalReviews == 1 ? 'review' : 'reviews'}',
+                                            style: GoogleFonts.montserrat(
+                                              decoration: TextDecoration.underline,
+                                              color: Colors.grey[600],
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -521,6 +536,7 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> with SingleTi
                   _buildBookNowButton(),
                   // Comments Section
                   CommentSection(
+                    key: _commentSectionKey,
                     campsiteId: widget.campsite.id,
                     campsiteName: widget.campsite['name'],
                   ),
@@ -619,26 +635,48 @@ class _CampsiteDetailsPageState extends State<CampsiteDetailsPage> with SingleTi
   }
 
   void _launchUrl(String url) async {
-    final Uri uri = Uri.parse(url);
-
     try {
       // Track the click before launching URL
       final bookingTrackingService = ViewTrackingService();
       await bookingTrackingService.incrementBookingLinkClicks(widget.campsite.id);
 
-      // Launch the URL
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
+      // Ensure URL has proper scheme
+      String formattedUrl = url;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        formattedUrl = 'https://$url';
+      }
+
+      final Uri uri = Uri.parse(formattedUrl);
+      print('🔗 Attempting to launch URL: $formattedUrl');
+
+      // Launch the URL with external application mode
+      bool launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+        webViewConfiguration: const WebViewConfiguration(
+          enableJavaScript: true,
+          enableDomStorage: true,
+        ),
+      );
+
+      if (!launched) {
+        print('❌ Failed to launch URL directly, trying platform default');
+        // Fallback: try with platform default
+        launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
+
+        if (!launched) {
+          throw 'Could not launch URL';
+        }
+      }
+
+      print('✅ Successfully launched URL');
+    } catch (e) {
+      print('❌ Error launching URL: $e');
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not launch booking link')),
+          const SnackBar(content: Text('Could not open booking link. Please check your internet connection and try again.')),
         );
       }
-    } catch (e) {
-      print('Error tracking or launching booking URL: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not launch booking link')),
-      );
     }
   }
 

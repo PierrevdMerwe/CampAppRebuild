@@ -183,6 +183,7 @@ class _SavedCampsitesScreenState extends State<SavedCampsitesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -229,31 +230,34 @@ class _SavedCampsitesScreenState extends State<SavedCampsitesScreen> {
                 ),
               );
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.favorite_border,
-                      size: 64,
-                      color: Colors.grey,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No saved campsites yet',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+              return Container(
+                color: Colors.white,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.favorite_border,
+                        size: 64,
+                        color: Colors.grey,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Tap the heart icon on a campsite to save it',
-                      style: GoogleFonts.montserrat(
-                        color: Colors.grey[600],
+                      const SizedBox(height: 16),
+                      Text(
+                        'No saved campsites yet',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      Text(
+                        'Tap the heart icon on a campsite to save it',
+                        style: GoogleFonts.montserrat(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             } else {

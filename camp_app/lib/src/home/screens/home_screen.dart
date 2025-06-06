@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import '../../campsite/screens/campsite_search_screen.dart';
 import '../../core/config/theme/theme_model.dart';
 import '../widgets/home_banner.dart';
 import '../widgets/category_grid.dart';
@@ -139,6 +141,43 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         SliverPersistentHeader(
                           delegate: _SearchBarDelegate(),
                           pinned: true,
+                        ),
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                            child: SizedBox(
+                              width: double.infinity,
+                              height: 45,
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => SearchScreen(
+                                        '', // Empty query to show all campsites
+                                        initialShowMap: true, // Start with map view
+                                        initialCenter: const LatLng(-30.74155601977579, 24.34204925536877), // Default center
+                                      ),
+                                    ),
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xff2e6f40),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.map, color: Colors.white),
+                                label: Text(
+                                  'View All Campsites on Map',
+                                  style: GoogleFonts.montserrat(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                         _buildSectionTitle(
                           'Popular Listings',

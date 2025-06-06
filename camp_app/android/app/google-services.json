@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "476988375532-45i25nkdn2s8kuikvph2tkqn2i7t7t6j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.camp_app",
+            "certificate_hash": "b65f195c5cd11093a722caf53c4bc550af196451"
+          }
+        },
+        {
           "client_id": "476988375532-dk686d7eb6l4cre6pa60m1unspauoa3c.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -45,6 +53,13 @@
             {
               "client_id": "476988375532-vuf4ee5f62v9bdjhd4m9rk6s8gle7jsa.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "476988375532-4ekl2hffthdipm3i29dlr79cjnr33mbp.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.campApp"
+              }
             }
           ]
         }
